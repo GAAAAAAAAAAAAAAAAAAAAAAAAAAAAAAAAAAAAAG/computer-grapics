@@ -50,6 +50,7 @@ int main()
 	int q = 1;
 	char C;
 	int I;
+	int cnt = 0;
 
 	while (q)
 	{
@@ -73,12 +74,18 @@ int main()
 		case 'e':
 			cout << "삽입할 문자와 간격 입력 : ";
 			cin >> C >> I;
-			
-			for (const string& sentence : s)
-			{
 
+			for (char c : s) 
+			{
+				//char c는 루프에서 사용할 반복 변수, 각 반복에서 s문자열의 한 문자를 대표, :는 범위 기반 for 루프에서 컨테이너와 반복 변수를 구분하는 연산자
+				
+				result += c;
+				cnt++;
+				if (cnt % I == 0)
+				{
+					result += C;
+				}
 			}
-		
 			cout << result << endl;
 			break;
 		case 'f':
