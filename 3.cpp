@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <fstream>
+#include <algorithm>
 #include <stdio.h>
 #include <iostream>
 #include <random>
@@ -17,6 +18,7 @@ int main()
 	ifstream in("test.txt");
 	string s;
 	string result;
+	string word;
 
 	//if (in.is_open()) {
 	//	//위치 지정자를 파일 끝으로 옮긴다.
@@ -31,19 +33,20 @@ int main()
 	//	in.read(&s[0], size);
 	//	cout << s << endl;
 	//}
-	
+
 	ifstream file("test.txt");
 	if (!file.is_open())
 	{
 		cerr << "파일을 열 수 없습니다." << endl;
 		return 1;
 	}
-	
+
 	string line;
 	while (getline(file, line))
 	{
-		s += line +'\n';
+		s += line + '\n';
 	}
+
 	file.close();
 
 	char order;
@@ -51,6 +54,9 @@ int main()
 	char C;
 	int I;
 	int cnt = 0;
+	char change, newC;
+
+	string pre, suf;
 
 	while (q)
 	{
@@ -89,14 +95,75 @@ int main()
 			cout << result << endl;
 			break;
 		case 'f':
+			for (char c : s) {
+				if (!isspace(c)) {
+					word += c;
+				}
+				else if (!word.empty()) {
+					reverse(word.begin(), word.end());
+					cout << word << ' ';
+					word.clear();
+				}
+			}
+			reverse(word.begin(), word.end());
+			cout << word << endl;
 			break;
 		case 'g':
+			cout << "바꿀 문자와 새로운 문자 입력 : ";
+			cin >> change >> newC;
+
+			for (char c : s)
+			{
+				if (c == change)
+				{
+					result += newC;
+				}
+				else
+				{
+					result += c;
+				}
+			}
+			cout << result << endl;
 			break;
 		case 'h':
+			for (int i = 0; i < s.length() / 2; i++)
+			{
+				if (s[i] == s[s.length() - i - 1])
+				{
+					cout << s.substr(0, i + 1) << " : " << s.substr(s.length() - i - 1, i + 1) << endl;
+
+				}
+				else
+				{
+					break;
+				}
+			}
 			break;
 		case '+':
+			for (char c : s) {
+				if (isdigit(c)) {
+					int digit = c - '0';
+					digit = max(digit + 1, 0);  // 음수 방지
+					result += to_string(digit);
+				}
+				else {
+					result += c;
+				}
+			}
+			cout << result << endl;
 			break;
 		case '-':
+			for (char c : s) {
+				if (isdigit(c)) {
+					int digit = c - '0';
+					digit = max(digit - 1, 0);  // 음수 방지
+					result += to_string(digit);
+				}
+				else {
+					result += c;
+				}
+			}
+			cout << result << endl;
 			break;
 		}
 	}
