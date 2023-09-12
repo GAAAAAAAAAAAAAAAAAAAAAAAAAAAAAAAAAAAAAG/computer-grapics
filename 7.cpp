@@ -162,7 +162,7 @@ int main()
 				{
 					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
 				}
-				cout << arr[i][j].c;
+				cout << arr[i][j].c << " ";
 			}
 			cout << endl;
 		}
@@ -187,6 +187,14 @@ int main()
 
 			plus = true;
 			minus = true;
+
+			for (int i = 0; i < 50; i++)
+			{
+				for (int j = 0; j < 50; j++)
+				{
+					arr[i][j].c = '1';
+				}
+			}
 
 			while (arr[49][49].c == '1')
 			{
