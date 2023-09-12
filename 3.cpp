@@ -24,12 +24,13 @@ int main()
 
 	string line[10];
 	string result[10];
+	string Ebefore[10];
 
 	for (int i = 0; i < 10; i++)
 	{
 		getline(file, line[i]);
 	}
-	
+
 	file.close();
 
 	char order;
@@ -39,19 +40,31 @@ int main()
 	int I;
 	int cnt = 0;
 
+	char oldC;
+	char newC;
+
+	bool E = false;
+	bool H = false;
+
 	while (q)
 	{
-		for (int i = 0; i < 10; i++)
+		if (!H)
 		{
-			cout << line[i] << endl;
+			for (int i = 0; i < 10; i++)
+			{
+				cout << line[i] << endl;
+			}
 		}
+
+		H = false;
+
 		for (int i = 0; i < 10; i++)
 		{
 			result[i].clear();
 		}
-		
+
 		cout << "명령어 입력 : ";
-		cin >> order;
+		std::cin >> order;
 
 		system("cls");
 
@@ -64,161 +77,142 @@ int main()
 			}
 			break;
 		case 'e':
-			cout << "삽입할 문자와 간격 입력 : ";
-		
-			cin >> insertC >> I;
 			cnt = 0;
+			E = !E;
+
+			if (E)
+			{
+				cout << "삽입할 문자와 간격 입력 : ";
+
+				std::cin >> insertC >> I;
+
+				for (int i = 0; i < 10; i++)
+				{
+					Ebefore[i] = line[i];
+				}
+
+				for (int i = 0; i < 10; i++)
+				{
+					for (char c : line[i])
+					{
+						result[i] += c;
+						cnt++;
+						if (cnt % I == 0)
+						{
+							result[i] += insertC;
+						}
+					}
+					line[i] = result[i];
+					cnt = 0;
+				}
+			}
+			else
+			{
+				for (int i = 0; i < 10; i++)
+				{
+					line[i] = Ebefore[i];
+				}
+				E = !E;
+			}
+
+			break;
+		case 'f':
+			for (int i = 0; i < 10; i++) {
+				string reversedLine = line[i]; // 원본 문자열을 복사
+
+				int start = 0;
+				int end = line[i].find(' ');
+
+				while (end != string::npos) {
+					// 공백을 기준으로 단어를 추출하고 뒤집어서 다시 추가
+					string word = line[i].substr(start, end - start);
+					reverse(word.begin(), word.end());
+					line[i].replace(start, end - start, word);
+
+					// 다음 공백을 찾을 준비
+					start = end + 1;
+					end = line[i].find(' ', start);
+				}
+
+				// 마지막 단어 처리
+				string lastWord = line[i].substr(start);
+				reverse(lastWord.begin(), lastWord.end());
+				line[i].replace(start, string::npos, lastWord);
+			}
+			break;
+		case 'g':
+			cout << "바꿀 문자와 새로운 문자 입력 : ";
+			std::cin >> oldC >> newC;
 
 			for (int i = 0; i < 10; i++)
 			{
 				for (char c : line[i])
 				{
-					result[i] += c;
-					cnt++;
-					if (cnt % I == 0)
+					if (c == oldC)
 					{
-						result[i] += insertC;
+						result[i] += newC;
+					}
+					else
+					{
+						result[i] += c;
 					}
 				}
 				line[i] = result[i];
-				cnt = 0;
 			}
 			break;
-		case 'f':
+		case 'h':
+			for (int i = 0; i < 10; i++)
+			{
+				for (int j = 0; j < line[i].length() / 2; j++)
+				{
+					if (line[i][j] == line[i][line[i].length() - j - 1])
+					{
+						cout << line[i] << " : " << line[i].substr(line[i].length() - i - 1, i + 1) << endl;
+						break;
+					}
+					else
+					{
+						cout << line[i] << " : " << '0' << endl;
+						break;
+					}
+				}
+			}
+			H = true;
+
+			//substr(start, count) : 시작위치부터 문자 개수만큼, substr(start) : 해당 위치부터 문자열 끝까지 <특정 범위의 문자열 추출>
+
+			break;
+		case '+':
+			for (int i = 0; i < 10; i++)
+			{
+				for (int j = 0; j < line[i].length(); j++)
+				{
+					if (isdigit(line[i][j]))
+					{
+						int num = line[i][j] - '0';
+						num = (num + 1) % 10;
+						line[i][j] = num + '0';
+					}
+				}
+			}
+			break;
+		case '-':
+			for (int i = 0; i < 10; i++)
+			{
+				for (int j = 0; j < line[i].length(); j++)
+				{
+					if (isdigit(line[i][j]))
+					{
+						int num = line[i][j] - '0';
+						num = (num - 1 + 10) % 10;
+						line[i][j] = num + '0';
+					}
+				}
+			}
 			break;
 		case 'q':
 			q = 0;
 			break;
 		}
 	}
-	//file.close();
-
-	//char order;
-	//int q = 1;
-	//char C;
-	//int I;
-	//int cnt = 0;
-	//char change, newC;
-
-	//string pre, suf;
-
-	//while (q)
-	//{
-	//	//clear 문자열 객체의 내용을 모두 제거하고 비움, 문자열 길이 = 0, string.clear()
-	//	result.clear();
-
-	//	cout << "명령어 입력 : ";
-	//	cin >> order;
-
-	//	switch (order)
-	//	{
-	//	case 'q':
-	//		q = 0;
-	//		break;
-	//	case 'd':
-	//		result = s;
-	//		reverse(result.begin(), result.end());	//시퀀스르 거꾸로 뒤집음, rverse(begin, end) begin과 end는 뒤집을 범위 나타냄
-	//		cout << result << endl;
-	//		break;
-	//		
-	//	case 'e':
-	//		cout << "삽입할 문자와 간격 입력 : ";
-	//		cin >> C >> I;
-
-	//		for (char c : s) 
-	//		{
-	//			//char c는 루프에서 사용할 반복 변수, 각 반복에서 s문자열의 한 문자를 대표, :는 범위 기반 for 루프에서 컨테이너와 반복 변수를 구분하는 연산자
-	//			
-	//			result += c;
-	//			cnt++;
-	//			if (cnt % I == 0)
-	//			{
-	//				result += C;
-	//			}
-	//		}
-	//		cout << result << endl;
-	//		break;
-	//	case 'f':
-	//		for (char c : s) {
-	//			if (!isspace(c)) {
-	//				word += c;
-	//			}
-	//			else if (!word.empty()) {
-	//				reverse(word.begin(), word.end());
-	//				cout << word << ' ';
-	//				word.clear();
-	//			}
-	//		}
-	//		reverse(word.begin(), word.end());
-	//		cout << word << endl;
-	//		break;
-	//	case 'g':
-	//		cout << "바꿀 문자와 새로운 문자 입력 : ";
-	//		cin >> change >> newC;
-
-	//		for (char c : s)
-	//		{
-	//			if (c == change)
-	//			{
-	//				result += newC;
-	//			}
-	//			else
-	//			{
-	//				result += c;
-	//			}
-	//		}
-	//		cout << result << endl;
-	//		break;
-	//	case 'h':
-	//		for (int i = 0; i < s.length() / 2; i++)
-	//		{
-	//			if (s[i] == s[s.length() - i - 1])
-	//			{
-	//				cout << s.substr(0, i + 1) << " : " << s.substr(s.length() - i - 1, i + 1) << endl;
-
-	//			}
-	//			else
-	//			{
-	//				break;
-	//			}
-	//		}
-	//		break;
-	//	case '+':
-	//		for (char c : s)
-	//		{
-	//			if (isdigit(c))
-	//			{
-	//				s[c] += 1;
-	//			}
-	//		}
-	//		cout << s;
-	//		//for (char c : s) {
-	//		//	if (isdigit(c)) {
-	//		//		int digit = c - '0';
-	//		//		digit = max(digit + 1, 0);  // 음수 방지
-	//		//		result += to_string(digit);
-	//		//	}
-	//		//	else {
-	//		//		result += c;
-	//		//	}
-	//		//}
-	//		//cout << result << endl;
-	//		break;
-	//	case '-':
-	//		//for (char c : s) {
-	//		//	if (isdigit(c)) {
-	//		//		int digit = c - '0';
-	//		//		digit = max(digit - 1, 0);  // 음수 방지
-	//		//		result += to_string(digit);
-	//		//	}
-	//		//	else {
-	//		//		result += c;
-	//		//	}
-	//		//}
-	//		//cout << result << endl;
-	//		break;
-	//	}
-	//}
-
-	//return 0;
 }
