@@ -9,13 +9,16 @@ using namespace std;
 
 random_device rd;
 mt19937 gen(rd());
-uniform_int_distribution<int> dis(0, 1);
+uniform_real_distribution<double> XYdis(-1, 1);
+uniform_real_distribution<double> dis(0, 1);
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
 GLvoid Mouse(int button, int state, int x, int y);
 GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y);
+GLvoid Motion(int x, int y);
+GLvoid TimerFunction(int value);
 
 int windowWidth = 800;
 int windowHeight = 600;
@@ -40,8 +43,10 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 
 	glutDisplayFunc(drawScene); // 출력 함수의 지정
 	glutReshapeFunc(Reshape); // 다시 그리기 함수 지정
+	glutTimerFunc(1000, TimerFunction, 1);
 	glutKeyboardFunc(Keyboard);
 	glutMouseFunc(Mouse);
+	glutMotionFunc(Motion);
 
 	glutMainLoop(); // 이벤트 처리 시작
 } 
@@ -67,10 +72,50 @@ GLvoid Mouse(int button, int state, int x, int y)
 	}
 }
 
+float openGLX, openGLY;
+int movingRectangle = -1;
+
+GLvoid Motion(int x, int y)
+{
+	if (movingRectangle >= 0)
+	{
+		WindowToOpenGL(x, y, openGLX, openGLY);
+
+		// 이동 중인 사각형의 중심점을 계산
+		//float centerX = (nemo[movingRectangle].x1 + nemo[movingRectangle].x2) / 2;
+		//float centerY = (nemo[movingRectangle].y1 + nemo[movingRectangle].y2) / 2;
+
+		// 이동한 거리 계산
+		//float deltaX = openGLX - centerX;
+		//float deltaY = openGLY - centerY;
+
+		// 사각형 위치 이동
+		//nemo[movingRectangle].x1 += deltaX;
+		//nemo[movingRectangle].x2 += deltaX;
+		//nemo[movingRectangle].y1 += deltaY;
+		//nemo[movingRectangle].y2 += deltaY;
+
+		glutPostRedisplay();  // 화면을 다시 그립니다.
+	}
+}
+
 GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y)
 {
 	x = (2.0f * mouseX) / windowWidth - 1.0f;
 	y = 1.0f - (2.0f * mouseY) / windowHeight;
+}
+
+GLvoid TimerFunction(int value)
+{
+	if (0)
+	{
+		drawScene();
+		glutTimerFunc(1000, TimerFunction, 0);
+	}
+	else
+	{
+		glutTimerFunc(1000, TimerFunction, 1);
+	}
 }
 
 GLvoid Keyboard(unsigned char key, int x, int y)
