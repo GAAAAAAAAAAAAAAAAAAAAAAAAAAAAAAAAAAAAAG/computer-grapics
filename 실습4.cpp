@@ -17,6 +17,7 @@ GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
 GLvoid Mouse(int button, int state, int x, int y);
 GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y);
+
 GLvoid TimerFunction(int value);
 
 int windowWidth = 800;
@@ -44,6 +45,10 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutReshapeFunc(Reshape); // 다시 그리기 함수 지정
 	glutKeyboardFunc(Keyboard);
 	glutMouseFunc(Mouse);
+	glutTimerFunc(1000, TimerFunction, 1);
+	glutTimerFunc(100, TimerFunction, 2);
+	glutTimerFunc(100, TimerFunction, 3);
+	glutTimerFunc(100, TimerFunction, 4);
 
 	glutMainLoop(); // 이벤트 처리 시작
 }
@@ -52,15 +57,19 @@ struct NEMO
 {
 	GLfloat x1, y1, x2, y2, r, g, b;
 	bool create;
+	int direction = 0;	//0 우상, 1 좌상, 2 좌하, 3 우하
 };
 NEMO nemo[5];
 
 bool start = true;
 double randomX, randomY;
 
-
-
-
+bool A = false;
+bool I = false;
+bool C = false;
+bool O = false;
+bool S = false;
+bool M = false;
 
 GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 {
@@ -73,14 +82,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 		int cnt = 0;
 		while (cnt < 5)
 		{
-			/*randomX = XYdis(gen);
-			randomY = XYdis(gen);
-
-			nemo[cnt].x1 = randomX;
-			nemo[cnt].x2 = randomX + 0.1;
-			nemo[cnt].y1 = randomY;
-			nemo[cnt].y2 = randomY + 0.1;*/
-
+			
 			nemo[cnt].r = dis(gen);
 			nemo[cnt].g = dis(gen);
 			nemo[cnt].b = dis(gen);
@@ -96,8 +98,11 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 	//--- 그리기 관련 부분이 여기에 포함된다.
 	for (int i = 0; i < 5; i++)
 	{
-		glColor3f(nemo[i].r, nemo[i].g, nemo[i].b);
-		glRectf(nemo[i].x1, nemo[i].y1, nemo[i].x2, nemo[i].y2);
+		if (nemo[i].create)
+		{
+			glColor3f(nemo[i].r, nemo[i].g, nemo[i].b);
+			glRectf(nemo[i].x1, nemo[i].y1, nemo[i].x2, nemo[i].y2);
+		}
 	}
 
 	glutSwapBuffers(); // 화면에 출력하기
@@ -109,12 +114,13 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 
 int cnt = 0;
 
+float XY[5][4];
+
 GLvoid Mouse(int button, int state, int x, int y)
 {
 	float openGLX, openGLY;
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-
 		if (cnt < 5)
 		{
 			WindowToOpenGL(x, y, openGLX, openGLY);
@@ -123,6 +129,11 @@ GLvoid Mouse(int button, int state, int x, int y)
 			nemo[cnt].x2 = openGLX + 0.05;
 			nemo[cnt].y1 = openGLY - 0.05;
 			nemo[cnt].y2 = openGLY + 0.05;
+
+			XY[cnt][0] = nemo[cnt].x1;
+			XY[cnt][1] = nemo[cnt].y1;
+			XY[cnt][2] = nemo[cnt].x2;
+			XY[cnt][3] = nemo[cnt].y2;
 
 			nemo[cnt].create = true;
 
@@ -137,31 +148,222 @@ GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y)
 	y = 1.0f - (2.0f * mouseY) / windowHeight;
 }
 
+int sizeChange = 0;	//50 좌우확대, 100 상하확대, 150 좌우축소, 200 상하축소
+int zigzag = 0;	//50 우상, 100 우하
+
 GLvoid TimerFunction(int value)
 {
-	if (T)
+	if (!S)
 	{
-		/*r = dis(gen);
-		g = dis(gen);
-		b = dis(gen);
+		switch (value)
+		{
+		case 1:
+			if (O)	//색상 변화 O
+			{
+				for (int i = 0; i < 5; i++)
+				{
+					nemo[i].r = dis(gen);
+					nemo[i].g = dis(gen);
+					nemo[i].b = dis(gen);
+				}
+			}
+			glutPostRedisplay();
+			glutTimerFunc(1000, TimerFunction, 1);
+			break;
+		case 2:
+			if (C)	//크기 변화 C
+			{
+				if (sizeChange >= 200)
+				{
+					sizeChange = 0;
+				}
+				if (sizeChange >= 0 && sizeChange < 50)
+				{
+					for (int i = 0; i < 5; i++)
+					{
+						nemo[i].x1 -= 0.05;
+						nemo[i].x2 += 0.05;
+						sizeChange++;
+					}
+				}
+				else if (sizeChange >= 50 && sizeChange < 100)
+				{
+					for (int i = 0; i < 5; i++)
+					{
+						nemo[i].y1 -= 0.05;
+						nemo[i].y2 += 0.05;
+						sizeChange++;
+					}
+				}
+				else if (sizeChange >= 100 && sizeChange < 150)
+				{
+					for (int i = 0; i < 5; i++)
+					{
+						nemo[i].x1 += 0.05;
+						nemo[i].x2 -= 0.05;
+						sizeChange++;
+					}
+				}
+				else if (sizeChange >= 150 && sizeChange < 200)
+				{
+					for (int i = 0; i < 5; i++)
+					{
+						nemo[i].y1 += 0.05;
+						nemo[i].y2 -= 0.05;
+						sizeChange++;
+					}
+				}
+			}
+			glutPostRedisplay();
+			glutTimerFunc(100, TimerFunction, 2);
+			break;
+		case 3:
+			if (I)	//지그재그 I
+			{
+				if (zigzag >= 100)
+				{
+					zigzag = 0;
+				}
+				if (zigzag >= 0 && zigzag < 50)
+				{
+					for (int i = 0; i < 5; i++)
+					{
+						nemo[i].x1 += 0.05;
+						nemo[i].y1 += 0.05;
+						nemo[i].x2 += 0.05;
+						nemo[i].y2 += 0.05;
+						zigzag++;
+					}
+				}
+				else if (zigzag >= 50 && zigzag < 100)
+				{
+					for (int i = 0; i < 5; i++)
+					{
+						nemo[i].x1 += 0.05;
+						nemo[i].y1 -= 0.05;
+						nemo[i].x2 += 0.05;
+						nemo[i].y2 -= 0.05;
+						zigzag++;
+					}
+				}
 
-		glClearColor(r, g, b, 1.0f);
-		glutPostRedisplay();*/
-		drawScene();
-		glutTimerFunc(1000, TimerFunction, 0);
-	}
-	else
-	{
-		glutTimerFunc(1000, TimerFunction, 1);
+				for (int i = 0; i < 5; i++)
+				{
+					if (((nemo[i].x1 + nemo[i].x2) / 2) > 1)
+					{
+						nemo[i].x1 -= 2;
+						nemo[i].x2 -= 2;
+					}
+				}
+			}
+			glutPostRedisplay();
+			glutTimerFunc(100, TimerFunction, 3);
+			break;
+		case 4:
+			if (A)	//대각선 A
+			{
+				for (int i = 0; i < 5; i++)
+				{
+					switch (nemo[i].direction)
+					{
+					case 0:
+						nemo[i].x1 += 0.05;
+						nemo[i].y1 += 0.05;
+						nemo[i].x2 += 0.05;
+						nemo[i].y2 += 0.05;
+						break;
+					case 1:
+						nemo[i].x1 -= 0.05;
+						nemo[i].y1 += 0.05;
+						nemo[i].x2 -= 0.05;
+						nemo[i].y2 += 0.05;
+						break;
+					case 2:
+						nemo[i].x1 -= 0.05;
+						nemo[i].y1 -= 0.05;
+						nemo[i].x2 -= 0.05;
+						nemo[i].y2 -= 0.05;
+						break;
+					case 3:
+						nemo[i].x1 += 0.05;
+						nemo[i].y1 -= 0.05;
+						nemo[i].x2 += 0.05;
+						nemo[i].y2 -= 0.05;
+						break;
+					}
+				}
+
+				for (int i = 0; i < 5; i++)
+				{
+					if (nemo[i].x1 < -1 || nemo[i].x2 > 1 || nemo[i].y1 < -1 || nemo[i].y2 > 1)
+					{
+						nemo[i].direction++;
+						if (nemo[i].direction > 3)
+						{
+							nemo[i].direction = 0;
+						}
+					}
+				}
+			}
+			glutPostRedisplay();
+			glutTimerFunc(100, TimerFunction, 4);
+			break;
+		}
 	}
 }
 
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
+	case 'a':
+		A = !A;
+		break;
+	case 'i':
+		I = !I;
+		break;
+	case 'c':
+		C = !C;
+		break;
+	case 'o':
+		O = !O;
+		break;
+	case 's':
+		S = !S;
+		if (!S)
+		{
+			glutTimerFunc(1000, TimerFunction, 1);
+			glutTimerFunc(100, TimerFunction, 2);
+			glutTimerFunc(100, TimerFunction, 3);
+			glutTimerFunc(100, TimerFunction, 4);
+		}
+		break;
+	case 'm':
+		M = !M;
+		for (int i = 0; i < 5; i++)
+		{
+			nemo[i].x1 = XY[i][0];
+			nemo[i].y1 = XY[i][1];
+			nemo[i].x2 = XY[i][2];
+			nemo[i].y2 = XY[i][3];
+		}
+		break;
+	case 'r':
+		for (int i = 0; i < 5; i++)
+		{
+			nemo[i].r = dis(gen);
+			nemo[i].g = dis(gen);
+			nemo[i].b = dis(gen);
+			nemo[i].create = false;
+		}
+		cnt = 0;
+		drawScene();
+		break;
 	case 'q':
 		glutLeaveMainLoop();
 		break;
 	}
 	glutPostRedisplay(); //--- 배경색이 바뀔 때마다 출력 콜백 함수를 호출하여 화면을 refresh 한다
 }
+
+//타이머 함수는 한 번만 실행되기 때문에 재귀함수로 다시 불러줘야한다.
+//if문 안에 타이머 함수를 넣었을 시에는 키를 받는 곳에 함수를 다시 불러준다.
