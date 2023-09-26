@@ -11,6 +11,7 @@ random_device rd;
 mt19937 gen(rd());
 uniform_real_distribution<double> XYdis(-1, 1);
 uniform_real_distribution<double> dis(0, 1);
+uniform_real_distribution<double> ANIMATIONdis(0, 2);
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
@@ -43,7 +44,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 
 	glutDisplayFunc(drawScene); // 출력 함수의 지정
 	glutReshapeFunc(Reshape); // 다시 그리기 함수 지정
-	glutTimerFunc(1000, TimerFunction, 1);
+	glutTimerFunc(500, TimerFunction, 1);
 	glutKeyboardFunc(Keyboard);
 	glutMouseFunc(Mouse);
 	glutMotionFunc(Motion);
@@ -51,13 +52,27 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutMainLoop(); // 이벤트 처리 시작
 }
 
+struct MININEMO
+{
+	GLfloat x1, y1, x2, y2, r, g, b;
+	int reduceCNT = 0;
+	bool create = false;
+};
+
 struct NEMO
 {
 	GLfloat x1, y1, x2, y2, r, g, b;
 	bool create;
-	int direction = 0;	//0 우상, 1 좌상, 2 좌하, 3 우하
+	int animation = 0;	//0 좌우상하, 1 대각선, 2 좌우상하대각선
+	bool selection = false;
+	GLfloat halfW, halfH;
+	MININEMO mininemo[8];
+	bool animationstart = false;
 };
+
 NEMO nemo[5];
+
+
 
 bool start = true;
 
@@ -85,6 +100,12 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 			nemo[cnt].g = dis(gen);
 			nemo[cnt].b = dis(gen);
 
+			//nemo[cnt].animation = ANIMATIONdis(gen);
+			nemo[cnt].animation = 0;
+
+			nemo[cnt].halfW = nemo[cnt].x1 + (nemo[cnt].x2 - nemo[cnt].x1)/2;
+			nemo[cnt].halfH = nemo[cnt].y1 + (nemo[cnt].y2 - nemo[cnt].y1)/2;
+
 			nemo[cnt].create = true;
 
 			cnt++;
@@ -94,12 +115,26 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 	//--- 그리기 관련 부분이 여기에 포함된다.
 	for (int i = 0; i < 5; i++)
 	{
-		if (nemo[i].create)
+		if (nemo[i].create && !nemo[i].selection)
 		{
 			glColor3f(nemo[i].r, nemo[i].g, nemo[i].b);
 			glRectf(nemo[i].x1, nemo[i].y1, nemo[i].x2, nemo[i].y2);
 		}
 	}
+
+	//미니네모 그리기!
+	for (int i = 0; i < 5; i++)
+	{
+		for (int j = 0; j < 8; j++)
+		{
+			if (nemo[i].mininemo[j].create)
+			{
+				glColor3f(nemo[i].mininemo[j].r, nemo[i].mininemo[j].g, nemo[i].mininemo[j].b);
+				glRectf(nemo[i].mininemo[j].x1, nemo[i].mininemo[j].y1, nemo[i].mininemo[j].x2, nemo[i].mininemo[j].y2);
+			}
+		}
+	}
+
 	glutSwapBuffers(); // 화면에 출력하기
 }
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
@@ -107,12 +142,22 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 	glViewport(0, 0, w, h);
 }
 
+
+
 GLvoid Mouse(int button, int state, int x, int y)
 {
 	float openGLX, openGLY;
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
 		WindowToOpenGL(x, y, openGLX, openGLY);
+
+		for (int i = 0; i < 5; i++)
+		{
+			if ((nemo[i].x1 < openGLX && nemo[i].x2 > openGLX) && (nemo[i].y1 < openGLY && nemo[i].y2 > openGLY))
+			{
+				nemo[i].selection = true;
+			}
+		}
 	}
 }
 
@@ -151,14 +196,90 @@ GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y)
 
 GLvoid TimerFunction(int value)
 {
-	if (0)
+	switch (value)
 	{
-		drawScene();
-		glutTimerFunc(1000, TimerFunction, 0);
-	}
-	else
-	{
-		glutTimerFunc(1000, TimerFunction, 1);
+	case 1:
+		for (int i = 0; i < 5; i++)
+		{
+			if (nemo[i].selection)
+			{
+				switch (nemo[i].animation)
+				{
+				case 0:
+					//초기설정
+					if (!nemo[i].animationstart)
+					{
+						nemo[i].mininemo[0].x1 = nemo[i].x1;
+						nemo[i].mininemo[0].y1 = nemo[i].y1;
+						nemo[i].mininemo[0].x2 = nemo[i].halfW;
+						nemo[i].mininemo[0].y2 = nemo[i].halfH;
+	
+						nemo[i].mininemo[1].x1 = nemo[i].halfW;
+						nemo[i].mininemo[1].y1 = nemo[i].y1;
+						nemo[i].mininemo[1].x2 = nemo[i].x2;
+						nemo[i].mininemo[1].y2 = nemo[i].halfH;
+
+						nemo[i].mininemo[2].x1 = nemo[i].halfW;
+						nemo[i].mininemo[2].y1 = nemo[i].halfH;
+						nemo[i].mininemo[2].x2 = nemo[i].x2;
+						nemo[i].mininemo[2].y2 = nemo[i].y2;
+					
+						nemo[i].mininemo[3].x1 = nemo[i].x1;
+						nemo[i].mininemo[3].y1 = nemo[i].halfH;
+						nemo[i].mininemo[3].x2 = nemo[i].halfW;
+						nemo[i].mininemo[3].y2 = nemo[i].y2;
+					
+						for (int j = 0; j < 4; j++)
+						{
+							nemo[i].mininemo[j].create = true;
+							nemo[i].mininemo[j].r = nemo[i].r;
+							nemo[i].mininemo[j].g = nemo[i].g;
+							nemo[i].mininemo[j].b = nemo[i].b;
+						}
+						
+						nemo[i].animationstart = true;
+					}
+					//위치 조정
+					nemo[i].mininemo[0].y1 -= 0.05;
+					nemo[i].mininemo[0].y2 -= 0.05;
+
+					nemo[i].mininemo[1].x1 += 0.05;
+					nemo[i].mininemo[1].x2 += 0.05;
+
+					nemo[i].mininemo[2].y1 += 0.05;
+					nemo[i].mininemo[2].y2 += 0.05;
+
+					nemo[i].mininemo[3].x1 -= 0.05;
+					nemo[i].mininemo[3].x2 -= 0.05;
+
+					//크기 조정
+					for (int j = 0; j < 4; j++)
+					{
+						nemo[i].mininemo[j].x1 += 0.01;
+						nemo[i].mininemo[j].y1 += 0.01;
+						nemo[i].mininemo[j].x2 -= 0.01;
+						nemo[i].mininemo[j].y2 -= 0.01;
+
+						nemo[i].mininemo[j].reduceCNT += 1;
+
+						if (nemo[i].mininemo[j].reduceCNT > 4)
+						{
+							nemo[i].mininemo[j].create = false;
+						}
+					}
+					
+					break;
+				case 1:
+					break;
+				case 2:
+					break;
+				}
+			}
+		}
+		glutPostRedisplay();
+		glutTimerFunc(500, TimerFunction, 1);
+		break;
+
 	}
 }
 
