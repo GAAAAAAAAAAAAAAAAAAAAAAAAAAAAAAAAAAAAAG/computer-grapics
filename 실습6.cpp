@@ -11,7 +11,7 @@ random_device rd;
 mt19937 gen(rd());
 uniform_real_distribution<double> XYdis(-1, 1);
 uniform_real_distribution<double> dis(0, 1);
-uniform_real_distribution<double> ANIMATIONdis(0, 2);
+uniform_real_distribution<double> ANIMATIONdis(0, 3);
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
@@ -100,8 +100,8 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 			nemo[cnt].g = dis(gen);
 			nemo[cnt].b = dis(gen);
 
-			//nemo[cnt].animation = ANIMATIONdis(gen);
-			nemo[cnt].animation = 0;
+			nemo[cnt].animation = ANIMATIONdis(gen);
+			//nemo[cnt].animation = 2;
 
 			nemo[cnt].halfW = nemo[cnt].x1 + (nemo[cnt].x2 - nemo[cnt].x1)/2;
 			nemo[cnt].halfH = nemo[cnt].y1 + (nemo[cnt].y2 - nemo[cnt].y1)/2;
@@ -267,11 +267,197 @@ GLvoid TimerFunction(int value)
 							nemo[i].mininemo[j].create = false;
 						}
 					}
-					
 					break;
 				case 1:
+					//초기설정
+					if (!nemo[i].animationstart)
+					{
+						nemo[i].mininemo[0].x1 = nemo[i].x1;
+						nemo[i].mininemo[0].y1 = nemo[i].y1;
+						nemo[i].mininemo[0].x2 = nemo[i].halfW;
+						nemo[i].mininemo[0].y2 = nemo[i].halfH;
+
+						nemo[i].mininemo[1].x1 = nemo[i].halfW;
+						nemo[i].mininemo[1].y1 = nemo[i].y1;
+						nemo[i].mininemo[1].x2 = nemo[i].x2;
+						nemo[i].mininemo[1].y2 = nemo[i].halfH;
+
+						nemo[i].mininemo[2].x1 = nemo[i].halfW;
+						nemo[i].mininemo[2].y1 = nemo[i].halfH;
+						nemo[i].mininemo[2].x2 = nemo[i].x2;
+						nemo[i].mininemo[2].y2 = nemo[i].y2;
+
+						nemo[i].mininemo[3].x1 = nemo[i].x1;
+						nemo[i].mininemo[3].y1 = nemo[i].halfH;
+						nemo[i].mininemo[3].x2 = nemo[i].halfW;
+						nemo[i].mininemo[3].y2 = nemo[i].y2;
+
+						for (int j = 0; j < 4; j++)
+						{
+							nemo[i].mininemo[j].create = true;
+							nemo[i].mininemo[j].r = nemo[i].r;
+							nemo[i].mininemo[j].g = nemo[i].g;
+							nemo[i].mininemo[j].b = nemo[i].b;
+						}
+
+						nemo[i].animationstart = true;
+					}
+					//위치 조정
+					nemo[i].mininemo[0].x1 -= 0.05;
+					nemo[i].mininemo[0].y1 -= 0.05;
+					nemo[i].mininemo[0].x2 -= 0.05;
+					nemo[i].mininemo[0].y2 -= 0.05;
+
+					nemo[i].mininemo[1].x1 += 0.05;
+					nemo[i].mininemo[1].y1 -= 0.05;
+					nemo[i].mininemo[1].x2 += 0.05;
+					nemo[i].mininemo[1].y2 -= 0.05;
+
+					nemo[i].mininemo[2].x1 += 0.05;
+					nemo[i].mininemo[2].y1 += 0.05;
+					nemo[i].mininemo[2].x2 += 0.05;
+					nemo[i].mininemo[2].y2 += 0.05;
+
+					nemo[i].mininemo[3].x1 -= 0.05;
+					nemo[i].mininemo[3].y1 += 0.05;
+					nemo[i].mininemo[3].x2 -= 0.05;
+					nemo[i].mininemo[3].y2 += 0.05;
+
+					//크기 조정
+					for (int j = 0; j < 4; j++)
+					{
+						nemo[i].mininemo[j].x1 += 0.01;
+						nemo[i].mininemo[j].y1 += 0.01;
+						nemo[i].mininemo[j].x2 -= 0.01;
+						nemo[i].mininemo[j].y2 -= 0.01;
+
+						nemo[i].mininemo[j].reduceCNT += 1;
+
+						if (nemo[i].mininemo[j].reduceCNT > 4)
+						{
+							nemo[i].mininemo[j].create = false;
+						}
+					}
 					break;
 				case 2:
+					//초기설정
+					if (!nemo[i].animationstart)
+					{
+						double X1, Y1, X2, Y2, X3, Y3, X4, Y4;
+						//nemo[cnt].halfW = nemo[cnt].x1 + (nemo[cnt].x2 - nemo[cnt].x1)/2;
+						X1 = (nemo[i].halfW - nemo[i].x1) / 2 + nemo[i].x1;
+						Y1 = (nemo[i].halfH - nemo[i].y1) / 2 + nemo[i].y1;
+
+						X2 = (nemo[i].x2 - nemo[i].halfW) / 2 + nemo[i].halfW;
+						Y2 = (nemo[i].halfH - nemo[i].y1) / 2 + nemo[i].y1;
+
+						X3 = (nemo[i].x2 - nemo[i].halfW) / 2 + nemo[i].halfW;
+						Y3 = (nemo[i].y2 - nemo[i].halfH) / 2 + nemo[i].halfH;
+
+						X4 = (nemo[i].halfW - nemo[i].x1) / 2 + nemo[i].x1;
+						Y4 = (nemo[i].y2 - nemo[i].halfH) / 2 + nemo[i].halfH;
+
+						nemo[i].mininemo[0].x1 = nemo[i].x1;
+						nemo[i].mininemo[0].y1 = nemo[i].y1;
+						nemo[i].mininemo[0].x2 = X1;
+						nemo[i].mininemo[0].y2 = Y1;
+
+						nemo[i].mininemo[1].x1 = X1;
+						nemo[i].mininemo[1].y1 = nemo[i].y1;
+						nemo[i].mininemo[1].x2 = X2;
+						nemo[i].mininemo[1].y2 = Y2;
+
+						nemo[i].mininemo[2].x1 = X2;
+						nemo[i].mininemo[2].y1 = nemo[i].y1;
+						nemo[i].mininemo[2].x2 = nemo[i].x2;
+						nemo[i].mininemo[2].y2 = Y2;
+
+						nemo[i].mininemo[3].x1 = X2;
+						nemo[i].mininemo[3].y1 = Y2;
+						nemo[i].mininemo[3].x2 = nemo[i].x2;
+						nemo[i].mininemo[3].y2 = Y3;
+
+						nemo[i].mininemo[4].x1 = X3;
+						nemo[i].mininemo[4].y1 = Y3;
+						nemo[i].mininemo[4].x2 = nemo[i].x2;
+						nemo[i].mininemo[4].y2 = nemo[i].y2;
+
+						nemo[i].mininemo[5].x1 = X4;
+						nemo[i].mininemo[5].y1 = Y4;
+						nemo[i].mininemo[5].x2 = X3;
+						nemo[i].mininemo[5].y2 = nemo[i].y2;
+
+						nemo[i].mininemo[6].x1 = nemo[i].x1;
+						nemo[i].mininemo[6].y1 = Y4;
+						nemo[i].mininemo[6].x2 = X4;
+						nemo[i].mininemo[6].y2 = nemo[i].y2;
+
+						nemo[i].mininemo[7].x1 = nemo[i].x1;
+						nemo[i].mininemo[7].y1 = Y1;
+						nemo[i].mininemo[7].x2 = X4;
+						nemo[i].mininemo[7].y2 = Y4;
+
+						for (int j = 0; j < 8; j++)
+						{
+							nemo[i].mininemo[j].create = true;
+							nemo[i].mininemo[j].r = nemo[i].r;
+							nemo[i].mininemo[j].g = nemo[i].g;
+							nemo[i].mininemo[j].b = nemo[i].b;
+						}
+
+						nemo[i].animationstart = true;
+					}
+
+					//위치 조정(좌우상하)
+					nemo[i].mininemo[1].y1 -= 0.05;
+					nemo[i].mininemo[1].y2 -= 0.05;
+
+					nemo[i].mininemo[3].x1 += 0.05;
+					nemo[i].mininemo[3].x2 += 0.05;
+
+					nemo[i].mininemo[5].y1 += 0.05;
+					nemo[i].mininemo[5].y2 += 0.05;
+
+					nemo[i].mininemo[7].x1 -= 0.05;
+					nemo[i].mininemo[7].x2 -= 0.05;
+
+					//위치 조정(대각선)
+					nemo[i].mininemo[0].x1 -= 0.05;
+					nemo[i].mininemo[0].y1 -= 0.05;
+					nemo[i].mininemo[0].x2 -= 0.05;
+					nemo[i].mininemo[0].y2 -= 0.05;
+
+					nemo[i].mininemo[2].x1 += 0.05;
+					nemo[i].mininemo[2].y1 -= 0.05;
+					nemo[i].mininemo[2].x2 += 0.05;
+					nemo[i].mininemo[2].y2 -= 0.05;
+
+					nemo[i].mininemo[4].x1 += 0.05;
+					nemo[i].mininemo[4].y1 += 0.05;
+					nemo[i].mininemo[4].x2 += 0.05;
+					nemo[i].mininemo[4].y2 += 0.05;
+
+					nemo[i].mininemo[6].x1 -= 0.05;
+					nemo[i].mininemo[6].y1 += 0.05;
+					nemo[i].mininemo[6].x2 -= 0.05;
+					nemo[i].mininemo[6].y2 += 0.05;
+
+					//크기 조정
+					for (int j = 0; j < 8; j++)
+					{
+						nemo[i].mininemo[j].x1 += 0.005;
+						nemo[i].mininemo[j].y1 += 0.005;
+						nemo[i].mininemo[j].x2 -= 0.005;
+						nemo[i].mininemo[j].y2 -= 0.005;
+
+						nemo[i].mininemo[j].reduceCNT += 1;
+
+						if (nemo[i].mininemo[j].reduceCNT > 5)
+						{
+							nemo[i].mininemo[j].create = false;
+						}
+					}
+
 					break;
 				}
 			}
