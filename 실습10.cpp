@@ -7,28 +7,23 @@
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
 #include <cmath>
-#include <vector>
+#include <random>
 
-GLfloat triShape[10][3][3] = {};//--- 삼각형 위치 값
-int triCnt = 0;
-bool T = false;
+using namespace std;
+random_device rd;
+mt19937 gen(rd());
+uniform_real_distribution<double> dis(-1.0, 1.0);
+uniform_real_distribution<double> colorDis(0.0, 1.0);
 
-GLfloat rectShape[10][4][3] = {}; //--- 사각형 위치 값
-int rectCnt = 0;
-bool R = false;
+GLfloat dotShape[5][1000][3] = {};
+int dotCnt =0;
 
-GLfloat lineShape[10][2][3] = {};
-int lineCnt = 0;
-bool L = false;
-
-GLfloat dotShape[10][3] = {};
-int dotCnt = 0;
-bool D = true;
-
-int AllCnt = 0;
+bool Pselect = true;
+bool Lselect = false;
+int cnt[5];
 
 GLfloat colors[4][3] = { //--- 삼각형 꼭지점 색상
-	{ 1.0, 0.0, 0.0 },
+	{ 0.0, 0.0, 0.0 },
 	{ 0.0, 1.0, 0.0 },
 	{ 0.0, 0.0, 1.0 },
 	{ 1.0, 1.0, 1.0 }
@@ -47,11 +42,11 @@ int windowHeight = 600;
 float openGLX, openGLY;
 int movingRectangle = -1;
 
-bool drawSpiral = false;
-bool drawClockwise = true;
-float spiralRadius = 0.0f;
-const float spiralIncrement = 0.002f;
-bool drawSecondSpiral = false;
+bool drawAsPoint = true;
+int numSpirals = 3;
+bool mouseClicked = false;
+float clickX, clickY;
+double r, g, b;
 
 void make_shaderProgram();
 void make_vertexShaders();
@@ -63,8 +58,8 @@ void InitBuffer();
 char* filetobuf(const char*);
 GLvoid Mouse(int button, int state, int x, int y);
 GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y);
-void draw_Spiral();
-void initialize();
+void drawSpiral(int dotCnt, double centerX, double centerY);
+GLvoid TimerFunction(int value);
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
@@ -83,11 +78,11 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	make_shaderProgram(); //--- 세이더 프로그램 만들기
 	InitBuffer();
 
-	initialize(); // 초기화 함수 호출
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
+	glutTimerFunc(100, TimerFunction, 1);
 	glutMouseFunc(Mouse);
 
 	glutMainLoop();
@@ -96,7 +91,11 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 GLvoid drawScene()
 {
 	//--- 변경된 배경색 설정
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	r = colorDis(gen);
+	g = colorDis(gen);
+	b= colorDis(gen);
+
+	glClearColor(r, g, b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//--- 렌더링 파이프라인에 세이더 불러오기
 	glUseProgram(shaderProgramID);
@@ -104,12 +103,34 @@ GLvoid drawScene()
 	glBindVertexArray(vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), colors, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), colors, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
-	if (drawSpiral) {
-		draw_Spiral();
+	//점 찍기
+	for (int i = 0; i < dotCnt; i++)
+	{
+		for (int j = 0; j < 1000; j++)
+		{
+			if (Pselect)
+			{
+				glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+				glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), dotShape[i][j], GL_STATIC_DRAW);
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+				glEnableVertexAttribArray(0);
+				glPointSize(2.0);
+				glDrawArrays(GL_POINTS, 0, 1);
+			}
+			else if (Lselect)
+			{
+				glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+				glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(GLfloat), dotShape[i][j], GL_STATIC_DRAW);
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+				glEnableVertexAttribArray(0);
+				glLineWidth(1.0);
+				glDrawArrays(GL_LINES, 0, 2);
+			}
+		}
 	}
 
 	glutSwapBuffers(); //--- 화면에 출력하기
@@ -207,22 +228,69 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
 	case 'p':
-		drawSpiral = true;
-		drawClockwise = true;
+		Pselect = true;
+		Lselect = false;
 		break;
 	case'l':
-		drawSpiral = true;
-		drawClockwise = false;
+		Pselect = false;
+		Lselect = true;
 		break;
-	case 1:
+	case '1':
+		for (int i = 0; i <1; i++)
+		{
+			double randomX, randomY;
+			randomX = dis(gen);
+			randomY = dis(gen);
+			drawSpiral(i, randomX, randomY);
+			
+		}
+		dotCnt = 1;
+		drawScene();
 		break;
-	case 2:
+	case '2':
+		for (int i = 0; i < 2; i++)
+		{
+			double randomX, randomY;
+			randomX = dis(gen);
+			randomY = dis(gen);
+			drawSpiral(i, randomX, randomY);
+		}
+		dotCnt = 2;
+		drawScene();
 		break;
-	case 3:
+	case '3':
+		for (int i = 0; i < 3; i++)
+		{
+			double randomX, randomY;
+			randomX = dis(gen);
+			randomY = dis(gen);
+			drawSpiral(i, randomX, randomY);
+		}
+		dotCnt = 3;
+		drawScene();
 		break;
-	case 4:
+	case '4':
+		for (int i = 0; i < 4; i++)
+		{
+			double randomX, randomY;
+			randomX = dis(gen);
+			randomY = dis(gen);
+			drawSpiral(i, randomX, randomY);
+			 
+		}
+		dotCnt = 4;
+		drawScene();
 		break;
-	case 5:
+	case '5':
+		for (int i = 0; i < 5; i++)
+		{
+			double randomX, randomY;
+			randomX = dis(gen);
+			randomY = dis(gen);
+			drawSpiral(i, randomX, randomY);	 
+		}
+		dotCnt = 5;
+		drawScene();
 		break;
 	case 'q':
 		glutLeaveMainLoop();
@@ -235,18 +303,12 @@ GLvoid Mouse(int button, int state, int x, int y)
 {
 	float openGLX, openGLY;
 
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	{
 		WindowToOpenGL(x, y, openGLX, openGLY);
-
-		if (!drawSpiral) {
-			// 첫 번째 클릭에서 스파이럴 그리기 시작
-			dotShape[0][0] = openGLX;
-			dotShape[0][1] = openGLY;
-			dotShape[0][2] = 0.0f;
-
-			drawSpiral = true;
-			drawClockwise = true; // 예시로 시계방향으로 설정
-		}
+		
+		drawSpiral(dotCnt,openGLX, openGLY);
+		dotCnt++;
 	}
 	glutPostRedisplay();
 }
@@ -257,84 +319,58 @@ GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y)
 	y = 1.0f - (2.0f * mouseY) / windowHeight;
 }
 
-//void draw_Spiral(float centerX, float centerY) {
-//	std::vector<GLfloat> vertices;
-//
-//	float direction = (drawClockwise) ? 1.0f : -1.0f;
-//
-//	for (float theta = 0.0f; theta <= 6.0f * 3.14159f; theta += 0.1f) {
-//		float x = centerX + spiralRadius * cos(theta) * direction;
-//		float y = centerY + spiralRadius * sin(theta) * direction;
-//
-//		vertices.push_back(x);
-//		vertices.push_back(y);
-//		vertices.push_back(0.0f);
-//
-//		spiralRadius += spiralIncrement;
-//
-//		if (spiralRadius > 0.5f) {
-//			drawSpiral = false;
-//			spiralRadius = 0.0f;
-//
-//			// 두 번째 스파이럴 그리기 시작
-//			drawClockwise = !drawClockwise;
-//			dotShape[1][0] = x + 0.2f;  // x좌표를 현재 위치에서 오른쪽으로 0.2f만큼 이동
-//			dotShape[1][1] = y;
-//			dotShape[1][2] = 0.0f;
-//
-//			// 이전 스파이럴의 끝점을 두 번째 스파이럴의 시작점으로 설정
-//			dotShape[0][0] = x;
-//			dotShape[0][1] = y;
-//			dotShape[0][2] = 0.0f;
-//
-//			drawSpiral = true;
-//
-//			break;
-//		}
-//	}
-//
-//	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-//	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
-//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-//	glEnableVertexAttribArray(0);
-//
-//	glDrawArrays(GL_POINTS, 0, vertices.size() / 3);
-//}
+void drawSpiral(int dotCnt, double centerX, double centerY)
+{
+	GLfloat theta, r;
+	cnt[dotCnt] = 0;
 
-const double radiusChangeRate = 0.05;
+	while (cnt[dotCnt] < 500)
+	{
+		theta = cnt[dotCnt] * 0.1;
+		r = 0.01 + 0.01 * theta;
 
-// 각도 변화율
-const double angleChangeRate = 0.1;
+		dotShape[dotCnt][cnt[dotCnt]][0] = r * cos(theta) + centerX;
+		dotShape[dotCnt][cnt[dotCnt]][1] = r * sin(theta) + centerY;
+		dotShape[dotCnt][cnt[dotCnt]][2] = 0.0;
 
-// 초기 반지름
-double radius = 0.5;
-
-// 초기 각도
-double angle = 0.0;
-
-// 원 스파이럴을 그리는 함수
-void draw_Spiral() {
-	glBegin(GL_POINTS);
-
-	// 원 스파이럴을 그리는 루프
-	for (int i = 0; i < 1000; ++i) {
-		double x = radius * cos(angle);
-		double y = radius * sin(angle);
-
-		glVertex2d(x, y);
-
-		// 반지름과 각도 갱신
-		radius += radiusChangeRate;
-		angle += angleChangeRate;
+		cnt[dotCnt]++;
 	}
 
-	glEnd();
+	double lastX, lastY;
+	lastX = dotShape[dotCnt][cnt[dotCnt] - 1][0];
+	lastY = dotShape[dotCnt][cnt[dotCnt] - 1][1];
+
+	dotShape[dotCnt][cnt[dotCnt]][0] = dotShape[dotCnt][cnt[dotCnt] - 1][0];
+	dotShape[dotCnt][cnt[dotCnt]][1] = dotShape[dotCnt][cnt[dotCnt] - 1][1];
+	dotShape[dotCnt][cnt[dotCnt]][2] = 0.0;
+
+	cnt[dotCnt]++;
+
+	double distanceX, distanceY;
+	distanceX = lastX - centerX;
+	distanceY = lastY - centerY;
+
+	double centerX2, centerY2;
+	centerX2 = lastX + distanceX;
+	centerY2 = lastY + distanceY;
+
+	double lastTheta = theta;
+	double lastR = r;
+
+	while (cnt[dotCnt] < 1000)
+	{
+		theta = lastTheta - (cnt[dotCnt]-500) * 0.1;
+		r = 0.01 + (- 0.01) * theta;
+
+		dotShape[dotCnt][cnt[dotCnt]][0] = r * cos(theta) + centerX2;
+		dotShape[dotCnt][cnt[dotCnt]][1] = r * sin(theta) + centerY2;
+		dotShape[dotCnt][cnt[dotCnt]][2] = 0.0;
+
+		cnt[dotCnt]++;
+	}
 }
 
-void initialize()
+GLvoid TimerFunction(int value)
 {
-	drawSpiral = false;
-	drawClockwise = true;
-	spiralRadius = 0.0f;
-	drawSecondSpiral = false;
+	glutTimerFunc(100, TimerFunction, 1);
 }
