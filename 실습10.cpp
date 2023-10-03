@@ -15,7 +15,7 @@ mt19937 gen(rd());
 uniform_real_distribution<double> dis(-1.0, 1.0);
 uniform_real_distribution<double> colorDis(0.0, 1.0);
 
-GLfloat dotShape[5][1000][3] = {};
+GLfloat dotShape[5][500][3] = {};
 int dotCnt =0;
 
 bool Pselect = true;
@@ -110,7 +110,7 @@ GLvoid drawScene()
 	//Á¡ Âï±â
 	for (int i = 0; i < dotCnt; i++)
 	{
-		for (int j = 0; j < 1000; j++)
+		for (int j = 0; j < 500; j++)
 		{
 			if (Pselect)
 			{
@@ -123,12 +123,15 @@ GLvoid drawScene()
 			}
 			else if (Lselect)
 			{
-				glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-				glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(GLfloat), dotShape[i][j], GL_STATIC_DRAW);
-				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-				glEnableVertexAttribArray(0);
-				glLineWidth(1.0);
-				glDrawArrays(GL_LINES, 0, 2);
+				if (j < 499)
+				{
+					glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+					glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(GLfloat), dotShape[i][j], GL_STATIC_DRAW);
+					glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+					glEnableVertexAttribArray(0);
+					glLineWidth(1.0);
+					glDrawArrays(GL_LINES, 0, 2);
+				}
 			}
 		}
 	}
@@ -324,7 +327,7 @@ void drawSpiral(int dotCnt, double centerX, double centerY)
 	GLfloat theta, r;
 	cnt[dotCnt] = 0;
 
-	while (cnt[dotCnt] < 500)
+	while (cnt[dotCnt] < 250)
 	{
 		theta = cnt[dotCnt] * 0.1;
 		r = 0.01 + 0.01 * theta;
@@ -357,9 +360,9 @@ void drawSpiral(int dotCnt, double centerX, double centerY)
 	double lastTheta = theta;
 	double lastR = r;
 
-	while (cnt[dotCnt] < 1000)
+	while (cnt[dotCnt] < 500)
 	{
-		theta = lastTheta - (cnt[dotCnt]-500) * 0.1;
+		theta = lastTheta - (cnt[dotCnt]-250) * 0.1;
 		r = 0.01 + (- 0.01) * theta;
 
 		dotShape[dotCnt][cnt[dotCnt]][0] = r * cos(theta) + centerX2;
