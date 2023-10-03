@@ -42,11 +42,9 @@ int windowHeight = 600;
 float openGLX, openGLY;
 int movingRectangle = -1;
 
-bool drawAsPoint = true;
-int numSpirals = 3;
-bool mouseClicked = false;
-float clickX, clickY;
-double r, g, b;
+double R, G, B;
+double theta[5], r[5], centerX[5], centerY[5], lastX[5], lastY[5], distanceX[5], distanceY[5], centerX2[5], centerY2[5], lastTheta[5], lastR[5];
+bool RGBchange = false;
 
 void make_shaderProgram();
 void make_vertexShaders();
@@ -58,7 +56,6 @@ void InitBuffer();
 char* filetobuf(const char*);
 GLvoid Mouse(int button, int state, int x, int y);
 GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y);
-void drawSpiral(int dotCnt, double centerX, double centerY);
 GLvoid TimerFunction(int value);
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
@@ -82,7 +79,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
-	glutTimerFunc(100, TimerFunction, 1);
+	glutTimerFunc(10, TimerFunction, 1);
 	glutMouseFunc(Mouse);
 
 	glutMainLoop();
@@ -91,11 +88,16 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 GLvoid drawScene()
 {
 	//--- 변경된 배경색 설정
-	r = colorDis(gen);
-	g = colorDis(gen);
-	b= colorDis(gen);
+	if (RGBchange)
+	{
+		R = colorDis(gen);
+		G = colorDis(gen);
+		B = colorDis(gen);
 
-	glClearColor(r, g, b, 1.0f);
+		RGBchange = false;
+	}
+	
+	glClearColor(R, G, B, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//--- 렌더링 파이프라인에 세이더 불러오기
 	glUseProgram(shaderProgramID);
@@ -123,7 +125,7 @@ GLvoid drawScene()
 			}
 			else if (Lselect)
 			{
-				if (j < 499)
+				if (j>1 && j < 499)
 				{
 					glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 					glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(GLfloat), dotShape[i][j], GL_STATIC_DRAW);
@@ -241,59 +243,47 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case '1':
 		for (int i = 0; i <1; i++)
 		{
-			double randomX, randomY;
-			randomX = dis(gen);
-			randomY = dis(gen);
-			drawSpiral(i, randomX, randomY);
-			
+			centerX[i] = dis(gen);
+			centerY[i] = dis(gen);
 		}
+		RGBchange = true;
 		dotCnt = 1;
-		drawScene();
 		break;
 	case '2':
 		for (int i = 0; i < 2; i++)
 		{
-			double randomX, randomY;
-			randomX = dis(gen);
-			randomY = dis(gen);
-			drawSpiral(i, randomX, randomY);
+			centerX[i] = dis(gen);
+			centerY[i] = dis(gen);
 		}
+		RGBchange = true;
 		dotCnt = 2;
-		drawScene();
 		break;
 	case '3':
 		for (int i = 0; i < 3; i++)
 		{
-			double randomX, randomY;
-			randomX = dis(gen);
-			randomY = dis(gen);
-			drawSpiral(i, randomX, randomY);
+			centerX[i] = dis(gen);
+			centerY[i] = dis(gen);
 		}
+		RGBchange = true;
 		dotCnt = 3;
-		drawScene();
 		break;
 	case '4':
 		for (int i = 0; i < 4; i++)
 		{
-			double randomX, randomY;
-			randomX = dis(gen);
-			randomY = dis(gen);
-			drawSpiral(i, randomX, randomY);
-			 
+			centerX[i] = dis(gen);
+			centerY[i] = dis(gen);
 		}
+		RGBchange = true;
 		dotCnt = 4;
-		drawScene();
 		break;
 	case '5':
 		for (int i = 0; i < 5; i++)
 		{
-			double randomX, randomY;
-			randomX = dis(gen);
-			randomY = dis(gen);
-			drawSpiral(i, randomX, randomY);	 
+			centerX[i] = dis(gen);
+			centerY[i] = dis(gen);
 		}
+		RGBchange = true;
 		dotCnt = 5;
-		drawScene();
 		break;
 	case 'q':
 		glutLeaveMainLoop();
@@ -309,9 +299,13 @@ GLvoid Mouse(int button, int state, int x, int y)
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
 		WindowToOpenGL(x, y, openGLX, openGLY);
-		
-		drawSpiral(dotCnt,openGLX, openGLY);
-		dotCnt++;
+		if (dotCnt < 5)
+		{
+			centerX[dotCnt] = openGLX;
+			centerY[dotCnt] = openGLY;
+			RGBchange = true;
+			dotCnt++;
+		}
 	}
 	glutPostRedisplay();
 }
@@ -322,58 +316,60 @@ GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y)
 	y = 1.0f - (2.0f * mouseY) / windowHeight;
 }
 
-void drawSpiral(int dotCnt, double centerX, double centerY)
-{
-	GLfloat theta, r;
-	cnt[dotCnt] = 0;
-
-	while (cnt[dotCnt] < 250)
-	{
-		theta = cnt[dotCnt] * 0.1;
-		r = 0.01 + 0.01 * theta;
-
-		dotShape[dotCnt][cnt[dotCnt]][0] = r * cos(theta) + centerX;
-		dotShape[dotCnt][cnt[dotCnt]][1] = r * sin(theta) + centerY;
-		dotShape[dotCnt][cnt[dotCnt]][2] = 0.0;
-
-		cnt[dotCnt]++;
-	}
-
-	double lastX, lastY;
-	lastX = dotShape[dotCnt][cnt[dotCnt] - 1][0];
-	lastY = dotShape[dotCnt][cnt[dotCnt] - 1][1];
-
-	dotShape[dotCnt][cnt[dotCnt]][0] = dotShape[dotCnt][cnt[dotCnt] - 1][0];
-	dotShape[dotCnt][cnt[dotCnt]][1] = dotShape[dotCnt][cnt[dotCnt] - 1][1];
-	dotShape[dotCnt][cnt[dotCnt]][2] = 0.0;
-
-	cnt[dotCnt]++;
-
-	double distanceX, distanceY;
-	distanceX = lastX - centerX;
-	distanceY = lastY - centerY;
-
-	double centerX2, centerY2;
-	centerX2 = lastX + distanceX;
-	centerY2 = lastY + distanceY;
-
-	double lastTheta = theta;
-	double lastR = r;
-
-	while (cnt[dotCnt] < 500)
-	{
-		theta = lastTheta - (cnt[dotCnt]-250) * 0.1;
-		r = 0.01 + (- 0.01) * theta;
-
-		dotShape[dotCnt][cnt[dotCnt]][0] = r * cos(theta) + centerX2;
-		dotShape[dotCnt][cnt[dotCnt]][1] = r * sin(theta) + centerY2;
-		dotShape[dotCnt][cnt[dotCnt]][2] = 0.0;
-
-		cnt[dotCnt]++;
-	}
-}
-
 GLvoid TimerFunction(int value)
 {
-	glutTimerFunc(100, TimerFunction, 1);
+	for (int i = 0; i < dotCnt; i++)
+	{
+		if (cnt[i] < 500)
+		{
+			cnt[i]++;
+		}
+
+		if (cnt[i] < 250)
+		{
+			theta[i] = cnt[i] * 0.1;
+			r[i] = 0.01 + 0.01 * theta[i];
+
+			dotShape[i][cnt[i]][0] = r[i] * cos(theta[i]) + centerX[i];
+			dotShape[i][cnt[i]][1] = r[i] * sin(theta[i]) + centerY[i];
+			dotShape[i][cnt[i]][2] = 0.0;
+
+			//cnt[i]++;
+		}
+
+		if (cnt[i] == 250)
+		{
+			lastX[i] = dotShape[i][cnt[i] - 1][0];
+			lastY[i] = dotShape[i][cnt[i] - 1][1];
+
+			dotShape[i][cnt[i]][0] = dotShape[i][cnt[i] - 1][0];
+			dotShape[i][cnt[i]][1] = dotShape[i][cnt[i] - 1][1];
+			dotShape[i][cnt[i]][2] = 0.0;
+
+			//cnt[i]++;
+
+			distanceX[i] = lastX[i] - centerX[i];
+			distanceY[i] = lastY[i] - centerY[i];
+
+			centerX2[i] = lastX[i] + distanceX[i];
+			centerY2[i] = lastY[i] + distanceY[i];
+
+			lastTheta[i] = theta[i];
+			lastR[i] = r[i];
+		}
+
+		if (cnt[i] > 250 && cnt[i] < 500)
+		{
+			theta[i] = lastTheta[i] - (cnt[i] - 250) * 0.1;
+			r[i] = 0.01 + (-0.01) * theta[i];
+
+			dotShape[i][cnt[i]][0] = r[i] * cos(theta[i]) + centerX2[i];
+			dotShape[i][cnt[i]][1] = r[i] * sin(theta[i]) + centerY2[i];
+			dotShape[i][cnt[i]][2] = 0.0;
+
+			//cnt[i]++;
+		}
+	}
+	glutPostRedisplay();  // 화면을 갱신하도록 추가
+	glutTimerFunc(10, TimerFunction, 1);
 }
