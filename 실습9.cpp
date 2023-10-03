@@ -27,12 +27,18 @@ bool start_3 = true;
 int triCnt_3[4];
 
 int triDirection_4[4];
-double gap[4]{};
+double theta[4];
+double r[4];
+int triDirection[4];
+int triCnt_4[4];
 
 double width = 0.3, height = 0.4;
 GLfloat temp1[4][3][3];
 GLfloat temp2[4][3][3];
 GLfloat temp3[4][3][3];
+GLfloat temp4[4][3][3];
+
+bool start4 = true;
 
 bool a = true;
 bool b = false;
@@ -63,6 +69,7 @@ char* filetobuf(const char*);
 GLvoid Mouse(int button, int state, int x, int y);
 GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y);
 GLvoid TimerFunction(int value);
+void rotation(int i, int direction);
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
@@ -230,6 +237,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case '4':
 		select = 4;
+		start4 = true;
 		break;
 	case 'q':
 		glutLeaveMainLoop();
@@ -295,99 +303,121 @@ GLvoid TimerFunction(int value)
 			switch (triDirection_1[i])
 			{
 			case 0:
-				triShape[i][0][0] += 0.01;
-				triShape[i][0][1] += 0.01;
-				triShape[i][1][0] += 0.01;
-				triShape[i][1][1] += 0.01;
-				triShape[i][2][0] += 0.01;
-				triShape[i][2][1] += 0.01;
+				triShape[i][0][0] += 0.01 * (i + 1);
+				triShape[i][0][1] += 0.01 * (i + 1);
+				triShape[i][1][0] += 0.01 * (i + 1);
+				triShape[i][1][1] += 0.01 * (i + 1);
+				triShape[i][2][0] += 0.01 * (i + 1);
+				triShape[i][2][1] += 0.01 * (i + 1);
+				for (int j = 0; j < 3; j++)
+				{
+					if (triShape[i][j][0] < -1 || triShape[i][j][0] > 1 || triShape[i][j][1] < -1 || triShape[i][j][1] > 1)
+					{
+						triDirection_1[i]++;
+						if (triDirection_1[i] > 3)
+						{
+							triDirection_1[i] = 0;
+						}
 
+						triShape[i][0][0] -= 0.01 * (i + 1)*2;
+						triShape[i][0][1] -= 0.01 * (i + 1)*2;
+						triShape[i][1][0] -= 0.01 * (i + 1)*2;
+						triShape[i][1][1] -= 0.01 * (i + 1)*2;
+						triShape[i][2][0] -= 0.01 * (i + 1)*2;
+						triShape[i][2][1] -= 0.01 * (i + 1)*2;
+
+						rotation(i, triDirection_1[i]);
+						break;
+					}
+				}
 				break;
 			case 1:
-				triShape[i][0][0] -= 0.01;
-				triShape[i][0][1] += 0.01;
-				triShape[i][1][0]-= 0.01;
-				triShape[i][1][1] += 0.01;
-				triShape[i][2][0] -= 0.01;
-				triShape[i][2][1] += 0.01;
+				triShape[i][0][0] -= 0.01* (i + 1);
+				triShape[i][0][1] += 0.01* (i + 1);
+				triShape[i][1][0] -= 0.01* (i + 1);
+				triShape[i][1][1] += 0.01* (i + 1);
+				triShape[i][2][0] -= 0.01* (i + 1);
+				triShape[i][2][1] += 0.01* (i + 1);
+				for (int j = 0; j < 3; j++)
+				{
+					if (triShape[i][j][0] < -1 || triShape[i][j][0] > 1 || triShape[i][j][1] < -1 || triShape[i][j][1] > 1)
+					{
+						triDirection_1[i]++;
+						if (triDirection_1[i] > 3)
+						{
+							triDirection_1[i] = 0;
+						}
+						triShape[i][0][0] += 0.01 * (i + 1)*2;
+						triShape[i][0][1] -= 0.01 * (i + 1)*2;
+						triShape[i][1][0] += 0.01 * (i + 1)*2;
+						triShape[i][1][1] -= 0.01 * (i + 1)*2;
+						triShape[i][2][0] += 0.01 * (i + 1)*2;
+						triShape[i][2][1] -= 0.01 * (i + 1)*2;
+
+						rotation(i, triDirection_1[i]);
+						break;
+					}
+				}
 				break;
 			case 2:
-				triShape[i][0][0] -= 0.01;
-				triShape[i][0][1] -= 0.01;
-				triShape[i][1][0] -= 0.01;
-				triShape[i][1][1] -= 0.01;
-				triShape[i][2][0] -= 0.01;
-				triShape[i][2][1] -= 0.01;
+				triShape[i][0][0] -= 0.01* (i + 1);
+				triShape[i][0][1] -= 0.01* (i + 1);
+				triShape[i][1][0] -= 0.01* (i + 1);
+				triShape[i][1][1] -= 0.01* (i + 1);
+				triShape[i][2][0] -= 0.01* (i + 1);
+				triShape[i][2][1] -= 0.01* (i + 1);
+				for (int j = 0; j < 3; j++)
+				{
+					if (triShape[i][j][0] < -1 || triShape[i][j][0] > 1 || triShape[i][j][1] < -1 || triShape[i][j][1] > 1)
+					{
+						triDirection_1[i]++;
+						if (triDirection_1[i] > 3)
+						{
+							triDirection_1[i] = 0;
+						}
+						triShape[i][0][0] += 0.01 * (i + 1)*2;
+						triShape[i][0][1] += 0.01 * (i + 1)*2;
+						triShape[i][1][0] += 0.01 * (i + 1)*2;
+						triShape[i][1][1] += 0.01 * (i + 1)*2;
+						triShape[i][2][0] += 0.01 * (i + 1)*2;
+						triShape[i][2][1] += 0.01 * (i + 1)*2;
+
+						rotation(i, triDirection_1[i]);
+						break;
+					}
+				}
 				break;
 			case 3:
-				triShape[i][0][0] += 0.01;
-				triShape[i][0][1] -= 0.01;
-				triShape[i][1][0] += 0.01;
-				triShape[i][1][1] -= 0.01;
-				triShape[i][2][0] += 0.01;
-				triShape[i][2][1] -= 0.01;
+				triShape[i][0][0] += 0.01* (i + 1);
+				triShape[i][0][1] -= 0.01* (i + 1);
+				triShape[i][1][0] += 0.01* (i + 1);
+				triShape[i][1][1] -= 0.01* (i + 1);
+				triShape[i][2][0] += 0.01* (i + 1);
+				triShape[i][2][1] -= 0.01* (i + 1);
+				for (int j = 0; j < 3; j++)
+				{
+					if (triShape[i][j][0] < -1 || triShape[i][j][0] > 1 || triShape[i][j][1] < -1 || triShape[i][j][1] > 1)
+					{
+						triDirection_1[i]++;
+						if (triDirection_1[i] > 3)
+						{
+							triDirection_1[i] = 0;
+						}
+						triShape[i][0][0] -= 0.01 * (i + 1)*2;
+						triShape[i][0][1] += 0.01 * (i + 1)*2;
+						triShape[i][1][0] -= 0.01 * (i + 1)*2;
+						triShape[i][1][1] += 0.01 * (i + 1)*2;
+						triShape[i][2][0] -= 0.01 * (i + 1)*2;
+						triShape[i][2][1] += 0.01 * (i + 1)*2;
+
+						rotation(i, triDirection_1[i]);
+						break;
+					}
+				}
 				break;
 			}
 		}
 
-		for (int i = 0; i < 4; i++)
-		{
-			for (int j = 0; j < 3; j++)
-			{
-				if (triShape[i][j][0] < -1 || triShape[i][j][0] > 1 || triShape[i][j][1] < -1 || triShape[i][j][1] > 1)
-				{
-					triDirection_1[i]++;
-					if (triDirection_1[i] > 3)
-					{
-						triDirection_1[i] = 0;
-					}
-
-					//방향 바뀌기
-					//GLfloat temp[4][3][3];
-
-					for (int k = 0; k < 3; k++)
-					{
-						for (int t = 0; t < 3; t++)
-						{
-							temp1[i][k][t] = triShape[i][k][t];
-						}
-					}
-
-					/*triShape[i][0][0] = temp[i][1][0];
-					triShape[i][0][1] = temp[i][1][1];
-					triShape[i][0][2] = temp[i][1][2];
-					triShape[i][1][0] = temp[i][2][0];
-					triShape[i][1][1] = temp[i][2][1];
-					triShape[i][1][2] = temp[i][2][2];
-					triShape[i][2][0] = temp[i][0][0];
-					triShape[i][2][1] = temp[i][0][1];
-					triShape[i][2][2] = temp[i][0][2];*/
-
-					
-					triShape[i][0][1] = temp1[i][2][1];
-					triShape[i][1][1] = temp1[i][2][1];
-					triShape[i][2][1] = temp1[i][1][1];
-					
-					//왼쪽 꼭지
-					/*triShape[i][1][0] = temp[i][0][0];
-					triShape[i][1][1] = temp[i][0][1] + 0.3;
-					triShape[i][1][2] = temp[i][0][2];
-					triShape[i][2][0] = temp[i][0][0] - 0.25;
-					triShape[i][2][1] = temp[i][0][1] + 0.15;
-					triShape[i][2][2] = temp[i][0][2];
-					
-					//오른쪽 꼭지
-					triShape[i][1][0] = temp[i][0][0];
-					triShape[i][1][1] = temp[i][0][1] + 0.3;
-					triShape[i][1][2] = temp[i][0][2];
-					triShape[i][2][0] = temp[i][0][0] + 0.25;
-					triShape[i][2][1] = temp[i][0][1] + 0.15;
-					triShape[i][2][2] = temp[i][0][2];*/
-					
-					break;
-				}
-			}
-		}
 		break;
 	case 2:
 		for (int i = 0; i < 4; i++)
@@ -395,15 +425,15 @@ GLvoid TimerFunction(int value)
 			switch (triDirection_2[i])
 			{
 			case 0:	//왼쪽으로
-				triShape[i][0][0] -= 0.01;
-				triShape[i][1][0] -= 0.01;
-				triShape[i][2][0] -= 0.01;
+				triShape[i][0][0] -= 0.01* (i + 1);
+				triShape[i][1][0] -= 0.01* (i + 1);
+				triShape[i][2][0] -= 0.01* (i + 1);
 				for (int j = 0; j < 3; j++)
 				{
 					if (triShape[i][j][0] < -1)
 					{
 						triDirection_2[i] = 1;
-						for (int k = 0; k < 3; k++)
+						/*for (int k = 0; k < 3; k++)
 						{
 							for (int t = 0; t < 3; t++)
 							{
@@ -412,33 +442,19 @@ GLvoid TimerFunction(int value)
 						}
 						triShape[i][0][1] = temp2[i][2][1];
 						triShape[i][1][1] = temp2[i][2][1];
-						triShape[i][2][1] = temp2[i][1][1];
+						triShape[i][2][1] = temp2[i][1][1];*/
+
+						rotation(i, triDirection_2[i]);
+
 						break;
 					}
 				}
 				
-				//방향 바뀌기
-			
-				/*for (int k = 0; k < 3; k++)
-				{
-					for (int t = 0; t < 3; t++)
-					{
-						temp2[i][k][t] = triShape[i][k][t];
-					}
-				}
-				triShape[i][0][1] = temp2[i][2][1];
-				triShape[i][1][1] = temp2[i][2][1];
-				triShape[i][2][1] = temp2[i][1][1];*/
-				/*triShape[i][1][0] = temp2[i][0][0];
-				triShape[i][1][1] = temp2[i][0][1] + 0.3;
-				triShape[i][2][0] = temp2[i][0][0] + 0.25;
-				triShape[i][2][1] = temp2[i][0][1] + 0.15;*/
-				
 				break;
 			case 1:	//아래쪽으로
-				triShape[i][0][1] -= 0.01;
-				triShape[i][1][1] -= 0.01;
-				triShape[i][2][1] -= 0.01;
+				triShape[i][0][1] -= 0.01* (i + 1);
+				triShape[i][1][1] -= 0.01* (i + 1);
+				triShape[i][2][1] -= 0.01* (i + 1);
 				downCnt_2[i]++;
 				for (int j = 0; j < 3; j++)
 				{
@@ -457,15 +473,15 @@ GLvoid TimerFunction(int value)
 				}
 				break;
 			case 2:	//오른쪽으로
-				triShape[i][0][0] += 0.01;
-				triShape[i][1][0] += 0.01;
-				triShape[i][2][0] += 0.01;
+				triShape[i][0][0] += 0.01* (i + 1);
+				triShape[i][1][0] += 0.01* (i + 1);
+				triShape[i][2][0] += 0.01* (i + 1);
 				for (int j = 0; j < 3; j++)
 				{
 					if (triShape[i][j][0]>1)
 					{
 						triDirection_2[i] = 3;
-						for (int k = 0; k < 3; k++)
+						/*for (int k = 0; k < 3; k++)
 						{
 							for (int t = 0; t < 3; t++)
 							{
@@ -474,33 +490,17 @@ GLvoid TimerFunction(int value)
 						}
 						triShape[i][0][1] = temp2[i][2][1];
 						triShape[i][1][1] = temp2[i][2][1];
-						triShape[i][2][1] = temp2[i][1][1];
+						triShape[i][2][1] = temp2[i][1][1];*/
+
+						rotation(i, triDirection_2[i]);
 						break;
 					}
 				}
-				//방향 바뀌기
-				
-
-				/*for (int k = 0; k < 3; k++)
-				{
-					for (int t = 0; t < 3; t++)
-					{
-						temp2[i][k][t] = triShape[i][k][t];
-					}
-				}*/
-			/*	triShape[i][1][0] = temp2[i][0][0];
-				triShape[i][1][1] = temp2[i][0][1] + 0.3;
-				triShape[i][2][0] = temp2[i][0][0] - 0.25;
-				triShape[i][2][1] = temp2[i][0][1] + 0.15;*/
-
-				/*triShape[i][0][1] = temp2[i][2][1];
-				triShape[i][1][1] = temp2[i][2][1];
-				triShape[i][2][1] = temp2[i][1][1];*/
 				break;
 			case 3:	//아래쪽으로
-				triShape[i][0][1] -= 0.01;
-				triShape[i][1][1] -= 0.01;
-				triShape[i][2][1] -= 0.01;
+				triShape[i][0][1] -= 0.01* (i + 1);
+				triShape[i][1][1] -= 0.01* (i + 1);
+				triShape[i][2][1] -= 0.01* (i + 1);
 				downCnt_2[i]++;
 				for (int j = 0; j < 3; j++)
 				{
@@ -530,9 +530,9 @@ GLvoid TimerFunction(int value)
 			{
 			case 0:
 				//왼쪽으로
-				triShape[i][0][0] -= 0.01;
-				triShape[i][1][0] -= 0.01;
-				triShape[i][2][0] -= 0.01;
+				triShape[i][0][0] -= 0.01* (i + 1);
+				triShape[i][1][0] -= 0.01* (i + 1);
+				triShape[i][2][0] -= 0.01* (i + 1);
 				for (int j = 0; j < 3; j++)
 				{
 					if (triShape[i][j][0]-triCnt_3[i]*0.1 < -1)
@@ -540,25 +540,20 @@ GLvoid TimerFunction(int value)
 						triDirection_3[i] = 1;
 						triCnt_3[i]++;
 
-						//방향 바뀌기
-						for (int k = 0; k < 3; k++)
-						{
-							for (int t = 0; t < 3; t++)
-							{
-								temp3[i][k][t] = triShape[i][k][t];
-							}
-						}
-						//완
-					/*	triShape[i][0][1] = temp3[i][2][1];
-						triShape[i][1][1] = temp3[i][2][1];
-						triShape[i][2][1] = temp3[i][1][1];
-						triShape[i][0][1] = temp3[i][2][1];
-						triShape[i][1][1] = temp3[i][2][1];
-						triShape[i][2][1] = temp3[i][1][1];*/
+						////방향 바뀌기
+						//for (int k = 0; k < 3; k++)
+						//{
+						//	for (int t = 0; t < 3; t++)
+						//	{
+						//		temp3[i][k][t] = triShape[i][k][t];
+						//	}
+						//}
 
-						triShape[i][0][1] = temp3[i][2][1];
-						triShape[i][1][1] = temp3[i][2][1];
-						triShape[i][2][1] = temp3[i][1][1];
+						//triShape[i][0][1] = temp3[i][2][1];
+						//triShape[i][1][1] = temp3[i][2][1];
+						//triShape[i][2][1] = temp3[i][1][1];
+						rotation(i, triDirection_3[i]);
+
 						break;
 					}
 					
@@ -566,9 +561,9 @@ GLvoid TimerFunction(int value)
 				break;
 			case 1:
 				//아래쪽으로
-				triShape[i][0][1] -= 0.01;
-				triShape[i][1][1] -= 0.01;
-				triShape[i][2][1] -= 0.01;
+				triShape[i][0][1] -= 0.01* (i + 1);
+				triShape[i][1][1] -= 0.01* (i + 1);
+				triShape[i][2][1] -= 0.01* (i + 1);
 				for (int j = 0; j < 3; j++)
 				{
 					if (triShape[i][j][1] - triCnt_3[i] * 0.1 < -1)
@@ -576,24 +571,18 @@ GLvoid TimerFunction(int value)
 						triDirection_3[i] = 2;
 						triCnt_3[i]++;
 
-						//방향 바뀌기
-						for (int k = 0; k < 3; k++)
-						{
-							for (int t = 0; t < 3; t++)
-							{
-								temp3[i][k][t] = triShape[i][k][t];
-							}
-						}
-						//오른쪽 꼭지
-						/*triShape[i][1][0] = temp3[i][0][0];
-						triShape[i][1][1] = temp3[i][0][1] + 0.3;
-					
-						triShape[i][2][0] = temp3[i][0][0] + 0.4;
-						triShape[i][2][1] = temp3[i][0][1] + 0.15;*/
-						triShape[i][0][1] = temp3[i][2][1];
-						triShape[i][1][1] = temp3[i][2][1];
-						triShape[i][2][1] = temp3[i][1][1];
-
+						////방향 바뀌기
+						//for (int k = 0; k < 3; k++)
+						//{
+						//	for (int t = 0; t < 3; t++)
+						//	{
+						//		temp3[i][k][t] = triShape[i][k][t];
+						//	}
+						//}
+						//triShape[i][0][1] = temp3[i][2][1];
+						//triShape[i][1][1] = temp3[i][2][1];
+						//triShape[i][2][1] = temp3[i][1][1];
+						rotation(i, triDirection_3[i]);
 						break;
 					}
 					
@@ -602,9 +591,9 @@ GLvoid TimerFunction(int value)
 				break;
 			case 2:
 				//오른쪽으로
-				triShape[i][0][0] += 0.01;
-				triShape[i][1][0] += 0.01;
-				triShape[i][2][0] += 0.01;
+				triShape[i][0][0] += 0.01* (i + 1);
+				triShape[i][1][0] += 0.01* (i + 1);
+				triShape[i][2][0] += 0.01* (i + 1);
 				for (int j = 0; j < 3; j++)
 				{
 					if (triShape[i][j][0] + triCnt_3[i] * 0.1 > 1)
@@ -613,21 +602,17 @@ GLvoid TimerFunction(int value)
 						triCnt_3[i]++;
 
 						//방향 바뀌기
-						for (int k = 0; k < 3; k++)
+						/*for (int k = 0; k < 3; k++)
 						{
 							for (int t = 0; t < 3; t++)
 							{
 								temp3[i][k][t] = triShape[i][k][t];
 							}
 						}
-						//완
-						/*triShape[i][1][0] = temp3[i][0][0] + 0.3;
-						triShape[i][1][1] = temp3[i][0][1];
-						triShape[i][2][0] = temp3[i][0][0] + 0.15;
-						triShape[i][2][1] = temp3[i][0][1] + 0.4;*/
 						triShape[i][0][1] = temp3[i][2][1];
 						triShape[i][1][1] = temp3[i][2][1];
-						triShape[i][2][1] = temp3[i][1][1];
+						triShape[i][2][1] = temp3[i][1][1];*/
+						rotation(i, triDirection_3[i]);
 						break;
 					}
 					
@@ -637,9 +622,9 @@ GLvoid TimerFunction(int value)
 				break;
 			case 3:
 				//위쪽으로
-				triShape[i][0][1] += 0.01;
-				triShape[i][1][1] += 0.01;
-				triShape[i][2][1] += 0.01;
+				triShape[i][0][1] += 0.01* (i + 1);
+				triShape[i][1][1] += 0.01* (i + 1);
+				triShape[i][2][1] += 0.01* (i + 1);
 				for (int j = 0; j < 3; j++)
 				{
 					if (triShape[i][j][1] + triCnt_3[i] * 0.1 >1)
@@ -647,25 +632,18 @@ GLvoid TimerFunction(int value)
 						triDirection_3[i] = 0;
 						triCnt_3[i]++;
 
-						//방향 바뀌기
-						for (int k = 0; k < 3; k++)
-						{
-							for (int t = 0; t < 3; t++)
-							{
-								temp3[i][k][t] = triShape[i][k][t];
-							}
-						}
-						//완
-						/*triShape[i][0][0] = temp3[i][2][0];
-						triShape[i][0][1] = temp3[i][2][1]-0.4;
-						triShape[i][1][0] = temp3[i][2][0];
-						triShape[i][1][1] = temp3[i][2][1];
-						triShape[i][2][0] = temp3[i][0][0] - 0.25;
-						triShape[i][2][1] = temp3[i][0][1] + 0.15;*/
-						triShape[i][0][1] = temp3[i][2][1];
-						triShape[i][1][1] = temp3[i][2][1];
-						triShape[i][2][1] = temp3[i][1][1];
-
+						////방향 바뀌기
+						//for (int k = 0; k < 3; k++)
+						//{
+						//	for (int t = 0; t < 3; t++)
+						//	{
+						//		temp3[i][k][t] = triShape[i][k][t];
+						//	}
+						//}
+						//triShape[i][0][1] = temp3[i][2][1];
+						//triShape[i][1][1] = temp3[i][2][1];
+						//triShape[i][2][1] = temp3[i][1][1];
+						rotation(i, triDirection_3[i]);
 						break;
 					}
 				}
@@ -680,39 +658,115 @@ GLvoid TimerFunction(int value)
 		}
 		break;
 	case 4:
-		for (int i = 0; i < 4; i++) {
-			//// 처음에만 초기화
-			//if (start_3) {
-			//	gap[i] = ((triShape[i][2][1] + triShape[i][1][1]) / 2) + 1;
-			//}
-			//
-			//// 각도에 따라 원스파이럴 경로 생성
-			//double angle = gap[i] + 0.01;  // 각도 증가
-			//double radius = 0.2;  // 반지름 조절
-			//triShape[i][0][0] = cos(angle) * radius;
-			//triShape[i][0][1] = sin(angle) * radius;
-			//triShape[i][1][0] = cos(angle + 2.094) * radius;  // 2.094는 120도
-			//triShape[i][1][1] = sin(angle + 2.094) * radius;
-			//triShape[i][2][0] = cos(angle + 4.188) * radius;  // 4.188은 240도
-			//triShape[i][2][1] = sin(angle + 4.188) * radius;
-			//
-			//// 각도 증가
-			//gap[i] += 0.01;
-			//
-			//// 방향이 바뀌지 않도록 수정
-			//triDirection_3[i] = 0;
-			//
-			//// 삼각형이 화면을 벗어나면 초기 위치로 돌아가도록 수정
-			//for (int j = 0; j < 3; j++) {
-			//	triShape[i][j][0] = triShape[i][j][0] > 1 ? 0.1 : triShape[i][j][0];
-			//	triShape[i][j][1] = triShape[i][j][1] > 1 ? 0.1 : triShape[i][j][1];
-			//}
-
-			
+		if (start4)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					for (int k = 0; k < 4; k++)
+					{
+						temp4[i][j][k] = triShape[i][j][k];
+					}
+				}
+			}
+			start4 = false;
 		}
-		start_3 = false;
+		for (int i = 0; i < 4; i++) {
+			
+			theta[i] = triCnt_4[i] * 0.1;
+			r[i] = 0.1 + 0.05 * theta[i];
+
+			triShape[i][0][0] = r[i] * cos(theta[i])* (i * 0.1 + 1) +temp4[i][0][0];
+			triShape[i][0][1] = r[i] * sin(theta[i])* (i * 0.1 + 1) +temp4[i][0][1];
+			triShape[i][0][2] = 0.0;
+
+			triShape[i][1][0] = r[i] * cos(theta[i])* (i * 0.1 + 1)+temp4[i][1][0];
+			triShape[i][1][1] = r[i] * sin(theta[i])* (i * 0.1 + 1)+temp4[i][1][1];
+			triShape[i][1][2] = 0.0;
+
+			triShape[i][2][0] = r[i] * cos(theta[i])* (i * 0.1 + 1)+temp4[i][2][0];
+			triShape[i][2][1] = r[i] * sin(theta[i])* (i * 0.1 + 1)+temp4[i][2][1];
+			triShape[i][2][2] = 0.0;
+
+			triCnt_4[i]++;
+			if (triCnt_4[i] > 150)
+			{
+				triCnt_4[i] = 0;
+			}
+		}
 		break;
 	}
 	glutPostRedisplay();
 	glutTimerFunc(10, TimerFunction, 1);
+}
+
+void rotation(int i, int direction)
+{
+	double cx, cy;
+
+	cx = (triShape[i][0][0] + triShape[i][1][0] + triShape[i][2][0])/3;
+	cy = (triShape[i][0][1] + triShape[i][1][1] + triShape[i][2][1])/3;
+
+	/*triShape[i][0][0] = cx;
+	triShape[i][0][1] = cy;
+	triShape[i][0][2] = 0.0;
+	triShape[i][1][0] = cx;
+	triShape[i][1][1] = cy;
+	triShape[i][1][2] = 0.0;
+	triShape[i][2][0] = cx;
+	triShape[i][2][1] = cy;
+	triShape[i][2][2] = 0.0;*/
+
+	switch (direction)
+	{
+	case 0:
+		//위쪽 꼭지
+		triShape[i][0][0] = cx - 0.15;
+		triShape[i][0][1] = cy - 0.15;
+		triShape[i][0][2] = 0.0;
+		triShape[i][1][0] = cx + 0.15;
+		triShape[i][1][1] = cy - 0.15;
+		triShape[i][1][2] = 0.0;
+		triShape[i][2][0] = cx;
+		triShape[i][2][1] = cy + 0.25;
+		triShape[i][2][2] = 0.0;
+		break;
+	case 1:
+		//아래쪽 꼭지
+		triShape[i][0][0] = cx + 0.15;
+		triShape[i][0][1] = cy + 0.15;
+		triShape[i][0][2] = 0.0;
+		triShape[i][1][0] = cx - 0.15;
+		triShape[i][1][1] = cy + 0.15;
+		triShape[i][1][2] = 0.0;
+		triShape[i][2][0] = cx;
+		triShape[i][2][1] = cy - 0.25;
+		triShape[i][2][2] = 0.0;
+		break;
+	case 2:
+		//왼쪽 꼭지
+		triShape[i][0][0] = cx + 0.15;
+		triShape[i][0][1] = cy - 0.15;
+		triShape[i][0][2] = 0.0;
+		triShape[i][1][0] = cx + 0.15;
+		triShape[i][1][1] = cy + 0.15;
+		triShape[i][1][2] = 0.0;
+		triShape[i][2][0] = cx - 0.25;
+		triShape[i][2][1] = cy;
+		triShape[i][2][2] = 0.0;
+		break;
+	case 3:
+		//오른쪽 꼭지
+		triShape[i][0][0] = cx - 0.15;
+		triShape[i][0][1] = cy + 0.15;
+		triShape[i][0][2] = 0.0;
+		triShape[i][1][0] = cx - 0.15;
+		triShape[i][1][1] = cy - 0.15;
+		triShape[i][1][2] = 0.0;
+		triShape[i][2][0] = cx + 0.25;
+		triShape[i][2][1] = cy;
+		triShape[i][2][2] = 0.0;
+		break;
+	}
 }
