@@ -226,6 +226,8 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	glutPostRedisplay(); //--- 배경색이 바뀔 때마다 출력 콜백 함수를 호출하여 화면을 refresh 한다
 }
 
+int crash = 0;
+
 GLvoid Mouse(int button, int state, int x, int y)
 {
 	float openGLX, openGLY;
@@ -255,36 +257,35 @@ GLvoid Mouse(int button, int state, int x, int y)
 				}
 			}
 
+			crash = 0;
+
 			//도형 이동
-			
-			//삼각형 값 대입
-			/*triShape[0][0][0] = lineShape[0][0][0];
-			triShape[0][0][1] = lineShape[0][0][1];
-			triShape[0][0][2] = 0.0;
-			triShape[0][1][0] = lineShape[0][1][0];
-			triShape[0][1][1] = lineShape[0][1][1];
-			triShape[0][1][2] = 0.0;
-			triShape[0][2][0] = lineShape[9][0][0];
-			triShape[0][2][1] = lineShape[9][0][1];
-			triShape[0][2][2] = 0.0;*/
-
-			triShape[0][0][0] = lineShape[0][0][0];
-			triShape[0][0][1] = lineShape[0][0][1];
-			triShape[0][0][2] = 0.0;
-			triShape[0][1][0] = lineShape[0][1][0];
-			triShape[0][1][1] = lineShape[0][1][1];
-			triShape[0][1][2] = 0.0;
-			triShape[0][2][0] = lineShape[9][0][0];
-			triShape[0][2][1] = lineShape[9][0][1];
-			triShape[0][2][2] = 0.0;
-
+			for (int i = 0; i < 10; i++)
+			{
+				if (lineShape[i][0][1] > lineShape[i][1][1])
+				{
+					if (openGLY > lineShape[i][1][1] && openGLY < lineShape[i][0][1])
+					{
+						crash++;
+					}
+				}
+				else if (lineShape[i][1][1] > lineShape[i][0][1])
+				{
+					if (openGLY > lineShape[i][0][1] && openGLY < lineShape[i][1][1])
+					{
+						crash++;
+					}
+				}
+			}
+			if (crash % 2 == 1)
+			{
+				movingRectangle = 1;
+			}
 
 		}
 		else if (state == GLUT_UP)
 		{
 			movingRectangle = -1;  // 마우스 버튼을 놓으면 이동 모드를 해제합니다.
-			/*clickNum1 = -2;
-			clickNum2 = -1;*/
 		}
 	}
 }
@@ -328,6 +329,23 @@ GLvoid Motion(int x, int y)
 	else if (movingRectangle == 1)
 	{
 		WindowToOpenGL(x, y, openGLX, openGLY);
+
+		float centerX[10];
+		float centerY[10];
+		float deltaX[10];
+		float deltaY[10];
+
+		for (int i = 0; i < 10; i++)
+		{
+			centerX[i] = lineShape[i][0][0];
+			centerY[i] = lineShape[i][0][1];
+
+			deltaX[i] = openGLX - centerX[i];
+			deltaY[i] = openGLY - centerY[i];
+
+			lineShape[i][0][0] += deltaX[i];
+			lineShape[i][0][1] += deltaY[i];
+		}
 
 		glutPostRedisplay();  // 화면을 다시 그립니다.
 	}
