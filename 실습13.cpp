@@ -230,6 +230,8 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 }
 
 int crash = 0;
+bool crashStart = false;
+float beforeX, beforeY;
 
 GLvoid Mouse(int button, int state, int x, int y)
 {
@@ -264,8 +266,8 @@ GLvoid Mouse(int button, int state, int x, int y)
 			crashLine[0][0] = openGLX;
 			crashLine[0][1] = openGLY;
 			crashLine[0][2] = 0.0;
-			crashLine[1][0] = 1.1;
-			crashLine[1][1] = 1.1;
+			crashLine[1][0] = 1.0;
+			crashLine[1][1] = openGLY;
 			crashLine[1][2] = 0.0;
 
 			for (int i = 0; i < 10; i++)
@@ -279,12 +281,16 @@ GLvoid Mouse(int button, int state, int x, int y)
 			if (crash % 2 == 1)
 			{
 				movingRectangle = 1;
+				crashStart = true;
+				beforeX = openGLX;
+				beforeY = openGLY;
 			}
 
 		}
 		else if (state == GLUT_UP)
 		{
 			movingRectangle = -1;  // 마우스 버튼을 놓으면 이동 모드를 해제합니다.
+			crashStart = false;
 		}
 	}
 }
@@ -327,11 +333,11 @@ GLvoid Motion(int x, int y)
 	}
 	else if (movingRectangle == 1)
 	{
-		//이곳에 코딩해줘 GPT야
+		////이곳에 코딩해줘 GPT야
 		WindowToOpenGL(x, y, openGLX, openGLY);
 
-		float deltaX = openGLX - lineShape[0][0][0];
-		float deltaY = openGLY - lineShape[0][0][1];
+		float deltaX = openGLX - beforeX;
+		float deltaY = openGLY - beforeY;
 
 		// 모든 선분의 두 점을 이동
 		for (int i = 0; i < 10; i++)
@@ -343,17 +349,15 @@ GLvoid Motion(int x, int y)
 			lineShape[i][1][1] += deltaY;
 		}
 
-		float dX1 = openGLX - dotShape[0][0];
-		float dY1 = openGLY - dotShape[0][1];
+		//눈알도 이동
+		dotShape[0][0] += deltaX;
+		dotShape[0][1] += deltaY;
+		dotShape[1][0]+= deltaX;
+		dotShape[1][1]+= deltaY;
 
-		float dX2 = openGLX - dotShape[1][0];
-		float dY2 = openGLY - dotShape[1][1];
 
-		dotShape[0][0] += dX1;
-		dotShape[0][1] += dY1;
-
-		dotShape[1][0] += dX1;
-		dotShape[1][1] += dY1;
+		beforeX = openGLX;
+		beforeY = openGLY;
 
 		glutPostRedisplay();  // 화면을 다시 그립니다.
 	}
