@@ -24,6 +24,8 @@ GLfloat lineShape[10][2][3] = {
 	{{0.25,0.25,0.0},{0.0,0.75,0.0}}
 };
 
+GLfloat crashLine[2][3] = {};
+
 GLfloat dotShape[2][3] = {
 	{-0.05,0.5,0.0},{0.05,0.5,0.0 } };
 
@@ -60,6 +62,7 @@ char* filetobuf(const char*);
 GLvoid Mouse(int button, int state, int x, int y);
 GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y);
 GLvoid Motion(int x, int y);
+int checkCollision(int i);
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
@@ -256,27 +259,23 @@ GLvoid Mouse(int button, int state, int x, int y)
 					break;
 				}
 			}
-
+			//이곳에서 선분끼리 충돌했는지 검사한다.
 			crash = 0;
+			crashLine[0][0] = openGLX;
+			crashLine[0][1] = openGLY;
+			crashLine[0][2] = 0.0;
+			crashLine[1][0] = 1.1;
+			crashLine[1][1] = 1.1;
+			crashLine[1][2] = 0.0;
 
-			//도형 이동
 			for (int i = 0; i < 10; i++)
 			{
-				if (lineShape[i][0][1] > lineShape[i][1][1])
+				if (checkCollision(i))
 				{
-					if (openGLY > lineShape[i][1][1] && openGLY < lineShape[i][0][1])
-					{
-						crash++;
-					}
-				}
-				else if (lineShape[i][1][1] > lineShape[i][0][1])
-				{
-					if (openGLY > lineShape[i][0][1] && openGLY < lineShape[i][1][1])
-					{
-						crash++;
-					}
+					crash++;
 				}
 			}
+
 			if (crash % 2 == 1)
 			{
 				movingRectangle = 1;
@@ -328,25 +327,74 @@ GLvoid Motion(int x, int y)
 	}
 	else if (movingRectangle == 1)
 	{
+		//이곳에 코딩해줘 GPT야
 		WindowToOpenGL(x, y, openGLX, openGLY);
 
-		float centerX[10];
-		float centerY[10];
-		float deltaX[10];
-		float deltaY[10];
+		float deltaX = openGLX - lineShape[0][0][0];
+		float deltaY = openGLY - lineShape[0][0][1];
 
+		// 모든 선분의 두 점을 이동
 		for (int i = 0; i < 10; i++)
 		{
-			centerX[i] = lineShape[i][0][0];
-			centerY[i] = lineShape[i][0][1];
+			lineShape[i][0][0] += deltaX;
+			lineShape[i][0][1] += deltaY;
 
-			deltaX[i] = openGLX - centerX[i];
-			deltaY[i] = openGLY - centerY[i];
-
-			lineShape[i][0][0] += deltaX[i];
-			lineShape[i][0][1] += deltaY[i];
+			lineShape[i][1][0] += deltaX;
+			lineShape[i][1][1] += deltaY;
 		}
 
+		float dX1 = openGLX - dotShape[0][0];
+		float dY1 = openGLY - dotShape[0][1];
+
+		float dX2 = openGLX - dotShape[1][0];
+		float dY2 = openGLY - dotShape[1][1];
+
+		dotShape[0][0] += dX1;
+		dotShape[0][1] += dY1;
+
+		dotShape[1][0] += dX1;
+		dotShape[1][1] += dY1;
+
 		glutPostRedisplay();  // 화면을 다시 그립니다.
+	}
+}
+
+int checkCollision(int i)
+{
+	// 두 선분의 좌표를 변수에 저장
+	double x1 = lineShape[i][0][0];
+	double x2 = lineShape[i][1][0];
+	double x3 = crashLine[0][0];
+	double x4 = crashLine[1][0];
+
+	double y1 = lineShape[i][0][1];
+	double y2 = lineShape[i][1][1];
+	double y3 = crashLine[0][1];
+	double y4 = crashLine[1][1];
+
+	// 두 선분의 방정식 계수
+	double a1 = y2 - y1;
+	double b1 = x1 - x2;
+	double c1 = x2 * y1 - x1 * y2;
+
+	double a2 = y4 - y3;
+	double b2 = x3 - x4;
+	double c2 = x4 * y3 - x3 * y4;
+
+	// 두 직선이 만나는 점의 좌표
+	double intersectionX = (b1 * c2 - b2 * c1) / (a1 * b2 - a2 * b1);
+	double intersectionY = (a2 * c1 - a1 * c2) / (a1 * b2 - a2 * b1);
+
+	// 점이 두 선분 사이에 있는지 확인
+	if (
+		(intersectionX >= fmin(x1, x2) && intersectionX <= fmax(x1, x2)) &&
+		(intersectionY >= fmin(y1, y2) && intersectionY <= fmax(y1, y2)) &&
+		(intersectionX >= fmin(x3, x4) && intersectionX <= fmax(x3, x4)) &&
+		(intersectionY >= fmin(y3, y4) && intersectionY <= fmax(y3, y4))
+		) {
+		return 1; // 두 선분이 교차함
+	}
+	else {
+		return 0; // 두 선분이 교차하지 않음
 	}
 }
