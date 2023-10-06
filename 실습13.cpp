@@ -9,7 +9,9 @@
 
 GLfloat triShape[8][3][3] = {};//--- 삼각형 위치 값
 
-GLfloat rectShape[1][4][3] = {}; //--- 사각형 위치 값
+GLfloat rectShape[4][3] = {
+	{-0.05, 0.35, 0.0}, {0.05,0.35,0.0},{0.05,0.45,0.0},{-0.05,0.45,0.0 }
+}; //--- 사각형 위치 값
 
 GLfloat lineShape[10][2][3] = {
 	{{0.0,0.75,0.0},{-0.25,0.25,0.0} },
@@ -29,12 +31,27 @@ GLfloat crashLine[2][3] = {};
 GLfloat dotShape[2][3] = {
 	{-0.05,0.5,0.0},{0.05,0.5,0.0 } };
 
-GLfloat colors[4][3] = { //--- 삼각형 꼭지점 색상
+GLfloat eyeColors[4][3] = { //--- 삼각형 꼭지점 색상
+	{ 0.0, 0.0, 0.0},
 	{ 0.0, 0.0, 0.0 },
-	{ 1.0, 1.0, 0.0 },
-	{ 0.0, 0.0, 1.0 },
-	{ 1.0, 1.0, 1.0 }
+	{ 0.0, 0.0, 0.0},
+	{ 0.0, 0.0, 0.0 }
 };
+
+GLfloat colors[4][3] = { //--- 삼각형 꼭지점 색상
+	{ 0.9, 0.9, 0.0 },
+	{ 0.9, 0.9, 0.0 },
+	{ 1.0, 1.0, 0.0 },
+	{ 0.0, 0.0, 0.0 }
+};
+
+GLfloat Libcolors[4][3] = { //--- 입 색상
+	{ 1.0, 0.6, 0.8 },
+	{  1.0, 0.6, 0.8 },
+	{  1.0, 0.6, 0.8 },
+	{  1.0, 0.6, 0.8 }
+};
+
 
 GLuint vao, vbo[2];
 GLuint TriPosVbo, TriColorVbo;
@@ -63,6 +80,7 @@ GLvoid Mouse(int button, int state, int x, int y);
 GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y);
 GLvoid Motion(int x, int y);
 int checkCollision(int i);
+GLvoid TimerFunction(int value);
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
@@ -84,6 +102,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
+	glutTimerFunc(1000, TimerFunction, 1);
 	glutMouseFunc(Mouse);
 	glutMotionFunc(Motion);
 
@@ -113,6 +132,10 @@ GLvoid drawScene()
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(0);
 
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), eyeColors, GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
 		glPointSize(10.0);
 		glDrawArrays(GL_POINTS, 0, 1);
 	}
@@ -124,9 +147,26 @@ GLvoid drawScene()
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(0);
 
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), colors, GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
 		glLineWidth(1.0);
 		glDrawArrays(GL_LINES, 0, 2);
 	}
+	//입 그리기
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), rectShape, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), Libcolors, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawArrays(GL_QUADS, 0, 4);
 
 	glutSwapBuffers(); //--- 화면에 출력하기
 }
@@ -355,6 +395,15 @@ GLvoid Motion(int x, int y)
 		dotShape[1][0]+= deltaX;
 		dotShape[1][1]+= deltaY;
 
+		//입도 이동
+		rectShape[0][0] += deltaX;
+		rectShape[1][0] += deltaX;
+		rectShape[2][0] += deltaX;
+		rectShape[3][0] += deltaX;
+		rectShape[0][1] += deltaY;
+		rectShape[1][1] += deltaY;
+		rectShape[2][1] += deltaY;
+		rectShape[3][1] += deltaY;
 
 		beforeX = openGLX;
 		beforeY = openGLY;
@@ -401,4 +450,24 @@ int checkCollision(int i)
 	else {
 		return 0; // 두 선분이 교차하지 않음
 	}
+}
+
+bool count = true;
+
+GLvoid TimerFunction(int value)
+{
+	if (count)
+	{
+		rectShape[0][1] += 0.05;
+		rectShape[1][1] += 0.05;
+		count = !count;
+	}
+	else
+	{
+		rectShape[0][1] -= 0.05;
+		rectShape[1][1] -= 0.05;
+		count = !count;
+	}
+	glutPostRedisplay();
+	glutTimerFunc(1000, TimerFunction, 1);
 }
