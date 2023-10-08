@@ -7,6 +7,7 @@
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
 #include <random>
+#include <math.h>
 
 using namespace std;
 random_device rd;
@@ -17,6 +18,7 @@ uniform_real_distribution<double> dis(-1.0,1.0);
 struct TRISHAPE
 {
 	GLfloat triShape[3][3];
+	GLfloat cX, cY;
 	bool alive = false;
 	bool animation = false;
 };
@@ -26,6 +28,7 @@ int Tcnt = 3;
 struct RECTSHAPE
 {
 	GLfloat rectShape[4][3];
+	GLfloat cX, cY;
 	bool alive = false;
 	bool animation = false;
 };
@@ -35,6 +38,7 @@ int Rcnt = 3;
 struct PENTASHAPE
 {
 	GLfloat pentaShape[5][3];
+	GLfloat cX, cY;
 	bool alive = false;
 	bool animation = false;
 };
@@ -44,6 +48,7 @@ int Pcnt = 3;
 struct LINESHAPE
 {
 	GLfloat lineShape[2][3];
+	GLfloat cX, cY;
 	bool alive = false;
 	bool animation = false;
 };
@@ -53,6 +58,7 @@ int Lcnt = 3;
 struct DOTSHAPE
 {
 	GLfloat dotShape[3];
+	GLfloat cX, cY;
 	bool alive = false;
 	bool animation = false;
 };
@@ -100,6 +106,15 @@ int movingRectangle = -1;
 
 bool start = true;
 double Size = 0.075;
+double deviation = 0.05;
+
+double cx1, cy1, cx2, cy2;
+double ra[5], rb[5];
+double abDistance;
+double Distance;
+int vertex1, vertex2;
+
+int select1, select2;
 
 void make_shaderProgram();
 void make_vertexShaders();
@@ -114,6 +129,7 @@ GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y);
 GLvoid Motion(int x, int y);
 GLvoid TimerFunction(int value);
 int checkCollision();
+BOOL Collision(float a_x1, float a_x2, float a_y1, float a_y2, float b_x1, float b_x2, float b_y1, float b_y2);
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
@@ -164,6 +180,8 @@ GLvoid drawScene()
 
 			d[cnt].dotShape[0] = centerX;
 			d[cnt].dotShape[1] = centerY;
+			d[cnt].cX = centerX;
+			d[cnt].cY = centerY;
 
 			centerX = dis(gen);
 			centerY = dis(gen);
@@ -171,6 +189,8 @@ GLvoid drawScene()
 			l[cnt].lineShape[0][1] = centerY;
 			l[cnt].lineShape[1][0] = centerX + Size;
 			l[cnt].lineShape[1][1] = centerY;
+			l[cnt].cX = centerX;
+			l[cnt].cY = centerY;
 
 			centerX = dis(gen);
 			centerY = dis(gen);
@@ -180,6 +200,8 @@ GLvoid drawScene()
 			t[cnt].triShape[1][1] = centerY - Size;
 			t[cnt].triShape[2][0] = centerX;
 			t[cnt].triShape[2][1] = centerY + Size;
+			t[cnt].cX = centerX;
+			t[cnt].cY = centerY;
 
 			centerX = dis(gen);
 			centerY = dis(gen);
@@ -191,6 +213,8 @@ GLvoid drawScene()
 			r[cnt].rectShape[2][1] = centerY + Size;
 			r[cnt].rectShape[3][0] = centerX - Size;
 			r[cnt].rectShape[3][1] = centerY + Size;
+			r[cnt].cX = centerX;
+			r[cnt].cY = centerY;
 
 			centerX = dis(gen);
 			centerY = dis(gen);
@@ -204,6 +228,8 @@ GLvoid drawScene()
 			p[cnt].pentaShape[3][1] = centerY + Size + Size/2;
 			p[cnt].pentaShape[4][0] = centerX - Size - Size/2;
 			p[cnt].pentaShape[4][1] = centerY + Size/2;
+			p[cnt].cX = centerX;
+			p[cnt].cY = centerY;
 
 			cnt++;
 		}
@@ -383,46 +409,139 @@ int movingMouse = -1;
 float beforeX, beforeY;
 int crash = 0;
 bool crashStart = false;
+int vertex = 0;
+int selectNum = 0;
 
 GLvoid Mouse(int button, int state, int x, int y)
 {
 	float openGLX, openGLY;
 
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	if (button == GLUT_LEFT_BUTTON)
 	{
-		WindowToOpenGL(x, y, openGLX, openGLY);
+		if (state == GLUT_DOWN)
+		{
+			WindowToOpenGL(x, y, openGLX, openGLY);
 
-		movingMouse = 0;
-
-		crashLine[0][0] = openGLX;
-		crashLine[0][1] = openGLY;
-		crashLine[0][2] = 0.0;
-		crashLine[1][0] = 1.0;
-		crashLine[1][1] = openGLY;
-		crashLine[1][2] = 0.0;
-
-		beforeX = openGLX;
-		beforeY = openGLY;
+			for (int i = 0; i < 10; i++)
+			{
+				if (t[i].cX - 0.07 < openGLX && t[i].cX + 0.07 > openGLX && t[i].cY - 0.07 < openGLY && t[i].cY + 0.07 > openGLY)
+				{
+					vertex = 3;
+					selectNum = i;
+					movingMouse = 0;
+					beforeX = openGLX;
+					beforeY = openGLY;
+					break;
+				}
+				else if (r[i].cX - 0.07 < openGLX && r[i].cX + 0.07 > openGLX && r[i].cY - 0.07 < openGLY && r[i].cY + 0.07 > openGLY)
+				{
+					vertex = 4;
+					selectNum = i;
+					movingMouse = 0;
+					beforeX = openGLX;
+					beforeY = openGLY;
+					break;
+				}
+				else if (p[i].cX - 0.07 < openGLX && p[i].cX + 0.07 > openGLX && p[i].cY - 0.07 < openGLY && p[i].cY + 0.07 > openGLY)
+				{
+					vertex = 5;
+					selectNum = i;
+					movingMouse = 0;
+					beforeX = openGLX;
+					beforeY = openGLY;
+					break;
+				}
+				else if (d[i].cX - 0.07 < openGLX && d[i].cX + 0.07 > openGLX && d[i].cY - 0.07 < openGLY && d[i].cY + 0.07 > openGLY)
+				{
+					vertex = 1;
+					selectNum = i;
+					movingMouse = 0;
+					beforeX = openGLX;
+					beforeY = openGLY;
+					break;
+				}
+				else if (l[i].cX - 0.07 < openGLX && l[i].cX + 0.07 > openGLX && l[i].cY - 0.07 < openGLY && l[i].cY + 0.07 > openGLY)
+				{
+					vertex = 2;
+					selectNum = i;
+					movingMouse = 0;
+					beforeX = openGLX;
+					beforeY = openGLY;
+					break;
+				}
+			}
+		}
+		else if (state == GLUT_UP)
+		{
+			movingMouse = -1;
+		}
 	}
-	else if (state == GLUT_UP)
-	{
-		movingMouse = -1;
-	}
+	
 }
 
 GLvoid Motion(int x, int y)
 {
 	if (movingMouse >= 0)
 	{
+		crashLine[1][0] = 1.0;
+		crashLine[1][1] = openGLY;
 		WindowToOpenGL(x, y, openGLX, openGLY);
 
 		float deltaX = openGLX - beforeX;
 		float deltaY = openGLY - beforeY;
 
-		// 모든 선분의 두 점을 이동
-		for (int i = 0; i < 10; i++)
+		switch (vertex)
 		{
-			
+		case 1:
+			d[selectNum].dotShape[0] += deltaX;
+			d[selectNum].dotShape[1] += deltaY;
+			d[selectNum].cX += deltaX;
+			d[selectNum].cY += deltaY;
+			break;
+		case 2:
+			l[selectNum].lineShape[0][0] += deltaX;
+			l[selectNum].lineShape[0][1] += deltaY;
+			l[selectNum].lineShape[1][0] += deltaX;
+			l[selectNum].lineShape[1][1] += deltaY;
+			l[selectNum].cX += deltaX;
+			l[selectNum].cY += deltaY;
+			break;
+		case 3:
+			t[selectNum].triShape[0][0] += deltaX;
+			t[selectNum].triShape[0][1] += deltaY;
+			t[selectNum].triShape[1][0] += deltaX;
+			t[selectNum].triShape[1][1] += deltaY;
+			t[selectNum].triShape[2][0] += deltaX;
+			t[selectNum].triShape[2][1] += deltaY;
+			t[selectNum].cX += deltaX;
+			t[selectNum].cY += deltaY;
+			break;
+		case 4:
+			r[selectNum].rectShape[0][0] += deltaX;
+			r[selectNum].rectShape[0][1] += deltaY;
+			r[selectNum].rectShape[1][0] += deltaX;
+			r[selectNum].rectShape[1][1] += deltaY;
+			r[selectNum].rectShape[2][0] += deltaX;
+			r[selectNum].rectShape[2][1] += deltaY;
+			r[selectNum].rectShape[3][0] += deltaX;
+			r[selectNum].rectShape[3][1] += deltaY;
+			r[selectNum].cX += deltaX;
+			r[selectNum].cY += deltaY;
+			break;
+		case 5:
+			p[selectNum].pentaShape[0][0] += deltaX;
+			p[selectNum].pentaShape[0][1] += deltaY;
+			p[selectNum].pentaShape[1][0] += deltaX;
+			p[selectNum].pentaShape[1][1] += deltaY;
+			p[selectNum].pentaShape[2][0] += deltaX;
+			p[selectNum].pentaShape[2][1] += deltaY;
+			p[selectNum].pentaShape[3][0] += deltaX;
+			p[selectNum].pentaShape[3][1] += deltaY;
+			p[selectNum].pentaShape[4][0] += deltaX;
+			p[selectNum].pentaShape[4][1] += deltaY;
+			p[selectNum].cX += deltaX;
+			p[selectNum].cY += deltaY;
+			break;
 		}
 
 		beforeX = openGLX;
@@ -443,6 +562,7 @@ GLvoid TimerFunction(int value)
 	switch (value)
 	{
 	case 1:
+
 		break;
 	}
 	glutPostRedisplay();
@@ -488,3 +608,104 @@ int checkCollision()
 		return 0; // 두 선분이 교차하지 않음
 	}
 }
+
+int collision(int vertex1, int selectNum1, int vertex2, int selectNum2)
+{
+	double cx1, cy1, cx2, cy2;
+	switch (vertex1)
+	{
+	case 1:
+		cx1 = d[selectNum1].cX;
+		cy1 = d[selectNum1].cY;
+		break;
+	case 2:
+		cx1 = l[selectNum1].cX;
+		cy1 = l[selectNum1].cY;
+		break;
+	case 3:
+		cx1 = t[selectNum1].cX;
+		cy1 = t[selectNum1].cY;
+		break;
+	case 4:
+		cx1 = r[selectNum1].cX;
+		cy1 = r[selectNum1].cY;
+		break;
+	case 5:
+		cx1 = p[selectNum1].cX;
+		cy1 = p[selectNum1].cY;
+		break;
+	}
+	switch (vertex2)
+	{
+	case 1:
+		cx1 = d[selectNum2].cX;
+		cy1 = d[selectNum2].cY;
+		break;
+	case 2:
+		cx1 = l[selectNum2].cX;
+		cy1 = l[selectNum2].cY;
+		break;
+	case 3:
+		cx1 = t[selectNum2].cX;
+		cy1 = t[selectNum2].cY;
+		break;
+	case 4:
+		cx1 = r[selectNum2].cX;
+		cy1 = r[selectNum2].cY;
+		break;
+	case 5:
+		cx1 = p[selectNum2].cX;
+		cy1 = p[selectNum2].cY;
+		break;
+	}
+
+	return Collision(cx1 - 0.07, cx1 + 0.07, cy1 - 0.07, cy1 + 0.07, cx2 - 0.07, cx2 + 0.07, cy2 - 0.07, cy2 + 0.07);
+}
+
+BOOL Collision(float a_x1, float a_x2, float a_y1, float a_y2, float b_x1, float b_x2, float b_y1, float b_y2)
+{
+	if (((b_x1 < a_x1 && a_x1 < b_x2) || (b_x1 < a_x2 && a_x2 < b_x2)) &&
+		((b_y1 < a_y2 && a_y2 < b_y2) ||  (b_y1 < a_y1 && a_y1 < b_y2)))
+	{
+		return true;
+	}
+	return false;
+}
+
+//int sat()
+//{
+//	Distance = cx2 - cx1;
+//
+//	/*for (int i = 0; i < vertex1; i++)
+//	{
+//		if (vertex1 == 4)
+//		{
+//			cx1 = t[select1].cX;
+//			cy1 = t[select2].cY;
+//		}
+//	}*/
+//
+//	//삼각형1
+//	for (int i = 0; i < 3; i++)
+//	{
+//		ra[i] = t[select1].triShape[i][0] - t[select1].cX;
+//		cx1 = t[select1].cX;
+//	}
+//	//삼각형2
+//	for (int i = 0; i < 3; i++)
+//	{
+//		rb[i] = t[select2].triShape[i][0] - t[select2].cX;
+//		cy1 = t[select1].cY;
+//	}
+//
+//	//확인
+//	for (int i = 0; i < 3; i++)
+//	{
+//		if (Distance >= ra[i] + rb[i])
+//		{
+//			return 1;
+//		}
+//	}
+//
+//	return 0;
+//}
