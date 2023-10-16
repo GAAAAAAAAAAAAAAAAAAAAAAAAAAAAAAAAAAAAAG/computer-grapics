@@ -113,9 +113,13 @@ int yTranslateSelect = -1;
 bool a = false;
 bool b = false;
 
+bool c = true;
+
 bool objectL = true;
 bool objectR = true;
 
+bool revolution = false;
+float revolutionAngle = 0;
 
 glm::mat4 model = glm::mat4(1.0f);
 
@@ -281,30 +285,46 @@ GLvoid drawScene()
 			model = glm::rotate(model, glm::radians(yRotation), glm::vec3(0.0f, 1.0f, 0.0f));
 
 		}
-
-
+		if (revolution > 0)
+		{
+			model = glm::rotate(glm::mat4(1.0f), glm::radians(revolutionAngle), glm::vec3(0.0f, 1.0f, 0.0f)) * model;
+		}
 	}
 	
+	if (c)
+	{
+		//정육면체
+		for (int i = 0; i < 12; i++) {
+			// modelTransform 변수에 변환 값 적용하기
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 
-	//정육면체
-	for (int i = 0; i < 12; i++) {
-		// modelTransform 변수에 변환 값 적용하기
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+			glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &colors[i][0], GL_STATIC_DRAW);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(1);
+
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+			glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &cube[i][0], GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(0);
+
+
+			//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+		}
+	}
+	else
+	{
+		//구
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &colors[i][0], GL_STATIC_DRAW);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(1);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &cube[i][0], GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(0);
-
-		
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		qobj = gluNewQuadric(); // 객체 생성하기
+		gluQuadricDrawStyle(qobj, GLU_LINE); // 도형 스타일
+		gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
+		gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
+		gluSphere(qobj, 1.0, 20, 20); // 객체 만들기
 	}
+	
 
 	model = glm::mat4(1.0f);
 
@@ -331,19 +351,34 @@ GLvoid drawScene()
 		if (yRotateSelect > 0)
 		{
 			model = glm::rotate(model, glm::radians(yRotation), glm::vec3(0.0f, 1.0f, 0.0f));
-
+		}
+		if (revolution > 0)
+		{
+			model = glm::rotate(glm::mat4(1.0f), glm::radians(revolutionAngle), glm::vec3(0.0f, 1.0f, 0.0f)) * model;
 		}
 	}
-	
-
 	//원뿔
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+	if (c)
+	{
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 
-	qobj = gluNewQuadric(); // 객체 생성하기
-	gluQuadricDrawStyle(qobj, GLU_LINE); // 도형 스타일
-	gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
-	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
-	gluCylinder(qobj, 1.0, 0.0, 2.0, 20, 8); // 객체 만들기
+		qobj = gluNewQuadric(); // 객체 생성하기
+		gluQuadricDrawStyle(qobj, GLU_LINE); // 도형 스타일
+		gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
+		gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
+		gluCylinder(qobj, 1.0, 0.0, 2.0, 20, 8); // 객체 만들기
+	}
+	else
+	{	//원통
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+		qobj = gluNewQuadric(); // 객체 생성하기
+		gluQuadricDrawStyle(qobj, GLU_LINE); // 도형 스타일
+		gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
+		gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
+		gluCylinder(qobj, 1.0, 1.0, 2.0, 20, 8); // 객체 만들기
+	}
+	
 
 	// modelTransform 변수에 변환 값 적용하기
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
@@ -439,6 +474,8 @@ char* filetobuf(const char* file)
 	return buf; // Return the buffer 
 }
 
+bool revolutionCnt = false;
+
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
@@ -465,8 +502,18 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		}
 		break;
 	case'r':
+		revolutionCnt = !revolutionCnt;
+		if (revolutionCnt)
+		{
+			revolution = 1;
+		}
+		else
+		{
+			revolution = 2;
+		}
 		break;
 	case 'c':
+		c = !c;
 		break;
 	case 's':
 		model = glm::mat4(1.0f);
@@ -478,6 +525,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		yTranslateSelect = -1;
 		xTransform = 0.0;
 		yTransform = 0.0;
+		revolution = 0;
 		break;
 	case'1':
 		objectL = true;
@@ -588,6 +636,14 @@ GLvoid TimerFunction(int value)
 		if (yRotateSelect == 1)
 		{
 			yRotation -= 1;
+		}
+		if (revolution == 2)
+		{
+			revolutionAngle += 1;
+		}
+		if (revolution == 1)
+		{
+			revolutionAngle -= 1;
 		}
 
 		break;
