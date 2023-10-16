@@ -259,19 +259,26 @@ GLvoid drawScene()
 
 	model = glm::mat4(1.0f);
 
-	//축소
-	model = glm::scale(model, glm::vec3(0.25, 0.25, 0.25));
-	
-	// x축으로 10도 회전
+	// x축으로 30도 회전
 	model = glm::rotate(model, glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	// y축으로 10도 회전
+	// y축으로 30도 회전
 	model = glm::rotate(model, glm::radians(-30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	// z축으로 10도 회전
+	// z축으로 0도 회전
 	model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-	//이동
-	model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 0.0f));
 
+	if (objectL)
+	{
+		if (revolution > 0)
+		{
+			model = glm::rotate(model, glm::radians(revolutionAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+		}
+	}
+
+	//이동
+	model = glm::translate(model, glm::vec3(-0.5f, 0.0f, 0.0f));
+
+	
 	//명령어 회전
 	if (objectL)
 	{
@@ -285,11 +292,18 @@ GLvoid drawScene()
 			model = glm::rotate(model, glm::radians(yRotation), glm::vec3(0.0f, 1.0f, 0.0f));
 
 		}
-		if (revolution > 0)
+		/*if (revolution > 0)
 		{
 			model = glm::rotate(glm::mat4(1.0f), glm::radians(revolutionAngle), glm::vec3(0.0f, 1.0f, 0.0f)) * model;
-		}
+		}*/
 	}
+
+
+
+	//축소
+	model = glm::scale(model, glm::vec3(0.25, 0.25, 0.25));
+
+	
 	
 	if (c)
 	{
@@ -324,23 +338,40 @@ GLvoid drawScene()
 		gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
 		gluSphere(qobj, 1.0, 20, 20); // 객체 만들기
 	}
-	
+	if (objectR)
+	{
+		if (revolution > 0)
+		{
+			model = glm::rotate(model, glm::radians(revolutionAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+		}
+	}
+
+
+	//s r t p
 
 	model = glm::mat4(1.0f);
 
-	//축소
-	model = glm::scale(model, glm::vec3(0.15, 0.15, 0.15));
-
-	// x축으로 10도 회전
+	// x축으로 30도 회전
 	model = glm::rotate(model, glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	// y축으로 10도 회전
+	// y축으로 30도 회전
 	model = glm::rotate(model, glm::radians(-30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	// z축으로 10도 회전
+	// z축으로 0도 회전
 	model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-	//이동
-	model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
 
+	if (objectR)
+	{
+		if (revolution > 0)
+		{
+			model = glm::rotate(model, glm::radians(revolutionAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+		}
+	}
+
+	//이동
+	model = glm::translate(model, glm::vec3(0.5f, 0.0f, 0.0f));
+
+
+	//명령어 회전
 	if (objectR)
 	{
 		if (xRotateSelect > 0)
@@ -351,12 +382,17 @@ GLvoid drawScene()
 		if (yRotateSelect > 0)
 		{
 			model = glm::rotate(model, glm::radians(yRotation), glm::vec3(0.0f, 1.0f, 0.0f));
+
 		}
-		if (revolution > 0)
+		/*if (revolution > 0)
 		{
 			model = glm::rotate(glm::mat4(1.0f), glm::radians(revolutionAngle), glm::vec3(0.0f, 1.0f, 0.0f)) * model;
-		}
+		}*/
 	}
+
+	//축소
+	model = glm::scale(model, glm::vec3(0.15, 0.15, 0.15));
+
 	//원뿔
 	if (c)
 	{
