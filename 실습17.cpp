@@ -122,9 +122,12 @@ float zTransformR = 0;
 
 //키보드 제자리 신축
 float hereScale = 1;
+float hereScaleL = 1;
+float hereScaleR = 1;
 //키보드 원점 기준 신축
 float Scale0 = 1;
-
+float Scale0L = 1;
+float Scale0R = 1;
 
 bool a = false;
 bool b = false;
@@ -151,6 +154,22 @@ bool rSelection = false;
 // 두 도형 원점기준으로 왔다리 갔다리
 bool Move0 = false;
 float Move0Size = 0;
+
+float Move0SizeXL = 0;
+float Move0SizeYL = 0;
+float Move0SizeZL = 0;
+
+float Move0SizeXR = 0;
+float Move0SizeYR = 0;
+float Move0SizeZR = 0;
+
+float Move0XL = 0;
+float Move0YL = 0;
+float Move0ZL = 0;
+float Move0XR = 0;
+float Move0YR = 0;
+float Move0ZR = 0;
+
 int Move0Cnt = 0;
 
 // 두 도형 원점 지나치고 왔다리 갔다리
@@ -355,7 +374,10 @@ GLvoid drawScene()
 	//원점에서 원래 자리까지 왔다리 갔다리
 	if (Move0)
 	{
-		model = glm::translate(model, glm::vec3(Move0Size, 0.0f, 0.0f));
+		//model = glm::translate(model, glm::vec3(Move0Size, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(Move0XL, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(0.0f, Move0YL, 0.0f));
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, Move0ZL));
 	}
 
 	//원점 지나서 원래 자리까지 왔다리 갔다리
@@ -381,9 +403,9 @@ GLvoid drawScene()
 	//방향키 도형 이동
 	if (objectL)
 	{
-		model = glm::translate(model, glm::vec3(xTransform, 0.0f, 0.0f));
-		model = glm::translate(model, glm::vec3(0.0f, yTransform, 0.0f));
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, zTransform));
+		model = glm::translate(model, glm::vec3(xTransformL, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(0.0f, yTransformL, 0.0f));
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, zTransformL));
 	}
 	
 	
@@ -446,7 +468,10 @@ GLvoid drawScene()
 	//원점에서 원래 자리까지 왔다리 갔다리
 	if (Move0)
 	{
-		model = glm::translate(model, glm::vec3(-Move0Size, 0.0f, 0.0f));
+		//model = glm::translate(model, glm::vec3(Move0Size, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(Move0XR, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(0.0f, Move0YR, 0.0f));
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, Move0ZR));
 	}
 
 	//원점 지나서 원래 자리까지 왔다리 갔다리
@@ -472,9 +497,9 @@ GLvoid drawScene()
 	//방향키 도형 이동
 	if (objectR)
 	{
-		model = glm::translate(model, glm::vec3(xTransform, 0.0f, 0.0f));
-		model = glm::translate(model, glm::vec3(0.0f, yTransform, 0.0f));
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, zTransform));
+		model = glm::translate(model, glm::vec3(xTransformR, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(0.0f, yTransformR, 0.0f));
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, zTransformR));
 	}
 	
 
@@ -608,10 +633,14 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	switch (key) {
 	//z축 이동
 	case '-':
-		zTransform -= 0.05;
+		//zTransform -= 0.05;
+		zTransformL -= 0.05;
+		zTransformR -= 0.05;
 		break;
 	case '=':
-		zTransform += 0.05;
+		//zTransform += 0.05;
+		zTransformL += 0.05;
+		zTransformR += 0.05;
 		break;
 	//제자리 신축
 	case 'o':
@@ -715,11 +744,26 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		//원점에서 원래 자리까지 왔다리 갔다리
 	case 't':
 		Move0 = !Move0;
+		if (Move0)
+		{
+			Move0SizeXL = (xTransformL- 0.5)/10;
+			Move0SizeYL = (yTransformL)/10;
+			Move0SizeZL = (zTransformL)/10;
+			Move0SizeXR = (xTransformR + 0.5)/10;
+			Move0SizeYR = (yTransformR)/10;
+			Move0SizeZR = (zTransformR)/10;
+		}
 
 		if (!Move0)
 		{
 			Move0Size = 0;
 			Move0Cnt = 0;
+			Move0XL=0;
+			Move0YL=0;
+			Move0ZL=0;
+			Move0XR=0;
+			Move0YR=0;
+			Move0ZR=0;
 		}
 		break;
 		//원점 지나치고 상대 자리에서 원래 자리까지 왔다리 갔다리
@@ -763,16 +807,36 @@ GLvoid SpecialKeys(int key, int x, int y)
 {
 	switch (key) {
 	case GLUT_KEY_UP:
-		yTransform += 0.05;
+		//yTransform += 0.05;
+		if (objectL)
+		{
+			yTransformL += 0.05;
+		}
+		if (objectR)
+		{
+			yTransformR += 0.05;
+		}
 		break;
 	case GLUT_KEY_DOWN:
-		yTransform -= 0.05;
+		//yTransform -= 0.05;
+		if (objectL)
+		{
+			yTransformL -= 0.05;
+		}
+		if (objectR)
+		{
+			yTransformR -= 0.05;
+		}
 		break;
 	case GLUT_KEY_LEFT:
-		xTransform -= 0.05;
+		//xTransform -= 0.05;
+		xTransformL -= 0.05;
+		xTransformR -= 0.05;
 		break;
 	case GLUT_KEY_RIGHT:
-		xTransform += 0.05;
+		//xTransform += 0.05;
+		xTransformL += 0.05;
+		xTransformR += 0.05;
 		break;
 	}
 	glutPostRedisplay(); // 화면 갱신
@@ -867,11 +931,23 @@ GLvoid TimerFunction(int value)
 		{
 			if (Move0Cnt < 10)
 			{
-				Move0Size += 0.05;
+				Move0XL -= Move0SizeXL;
+				Move0YL -= Move0SizeYL;
+				Move0ZL -= Move0SizeZL;
+				Move0XR -= Move0SizeXR;
+				Move0YR -= Move0SizeYR;
+				Move0ZR -= Move0SizeZR;
 			}
 			else if (Move0Cnt > 10 && Move0Cnt < 20)
 			{
-				Move0Size -= 0.05;
+				Move0XL += Move0SizeXL;
+				Move0YL += Move0SizeYL;
+				Move0ZL += Move0SizeZL;
+				Move0XR += Move0SizeXR;
+				Move0YR += Move0SizeYR;
+				Move0ZR += Move0SizeZR;
+
+				//Move0Size -= 0.05;
 			}
 			else if (Move0Cnt == 20)
 			{
