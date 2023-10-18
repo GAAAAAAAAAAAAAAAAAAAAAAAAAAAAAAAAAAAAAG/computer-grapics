@@ -401,12 +401,11 @@ GLvoid drawScene()
 	}
 
 	//방향키 도형 이동
-	if (objectL)
-	{
-		model = glm::translate(model, glm::vec3(xTransformL, 0.0f, 0.0f));
-		model = glm::translate(model, glm::vec3(0.0f, yTransformL, 0.0f));
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, zTransformL));
-	}
+
+	model = glm::translate(model, glm::vec3(xTransformL, 0.0f, 0.0f));
+	model = glm::translate(model, glm::vec3(0.0f, yTransformL, 0.0f));
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, zTransformL));
+
 	
 	
 	
@@ -417,16 +416,15 @@ GLvoid drawScene()
 	}
 	
 	//키보드 제자리 신축
-	if (objectL)
+	if (!rSelection)
 	{
-		model = glm::scale(model, glm::vec3(hereScale, hereScale, hereScale));
+		model = glm::scale(model, glm::vec3(hereScaleL, hereScaleL, hereScaleL));
 	}
 	
-
 	//원점 기준으로 신축
-	if (objectL)
+	if (!rSelection)
 	{
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(Scale0, Scale0, Scale0)) * model;
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(Scale0L, Scale0L, Scale0L)) * model;
 	}
 	
 	//축소
@@ -463,7 +461,11 @@ GLvoid drawScene()
 	model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	//공전
-	model = glm::rotate(model, glm::radians(revolutionAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+	if (revolution > 0)
+	{
+		model = glm::rotate(model, glm::radians(revolutionAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	}
 
 	//원점에서 원래 자리까지 왔다리 갔다리
 	if (Move0)
@@ -495,14 +497,10 @@ GLvoid drawScene()
 	}
 
 	//방향키 도형 이동
-	if (objectR)
-	{
-		model = glm::translate(model, glm::vec3(xTransformR, 0.0f, 0.0f));
-		model = glm::translate(model, glm::vec3(0.0f, yTransformR, 0.0f));
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, zTransformR));
-	}
+	model = glm::translate(model, glm::vec3(xTransformR, 0.0f, 0.0f));
+	model = glm::translate(model, glm::vec3(0.0f, yTransformR, 0.0f));
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, zTransformR));
 	
-
 	//이동
 	if (!rSelection)
 	{
@@ -510,16 +508,20 @@ GLvoid drawScene()
 	}
 
 	//키보드 제자리 신축
-	if (objectR)
+	if (!rSelection)
 	{
-		model = glm::scale(model, glm::vec3(hereScale, hereScale, hereScale));
+		model = glm::scale(model, glm::vec3(hereScaleR, hereScaleR, hereScaleR));
+
 	}
 	
+	
 	//원점 기준으로 신축
-	if (objectR)
+	if (!rSelection)
 	{
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(Scale0, Scale0, Scale0)) * model;
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(Scale0R, Scale0R, Scale0R)) * model;
+
 	}
+	
 	
 	//축소
 	model = glm::scale(model, glm::vec3(0.15, 0.15, 0.15));
@@ -634,27 +636,80 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	//z축 이동
 	case '-':
 		//zTransform -= 0.05;
-		zTransformL -= 0.05;
-		zTransformR -= 0.05;
+		if (objectL)
+		{
+			zTransformL -= 0.05;
+		}
+		if (objectR)
+		{
+			zTransformR -= 0.05;
+		}
+		
 		break;
 	case '=':
 		//zTransform += 0.05;
-		zTransformL += 0.05;
-		zTransformR += 0.05;
+		if (objectL)
+		{
+			zTransformL += 0.05;
+		}
+		if (objectR)
+		{
+			zTransformR += 0.05;
+		}
 		break;
 	//제자리 신축
 	case 'o':
-		hereScale -= 0.05;
+		//hereScale -= 0.05;
+		if (objectL)
+		{
+			hereScaleL -= 0.05;
+
+		}
+		if (objectR)
+		{
+			hereScaleR -= 0.05;
+
+		}
 		break;
 	case 'p':
-		hereScale += 0.05;
+		//hereScale += 0.05;
+		if (objectL)
+		{
+			hereScaleL += 0.05;
+
+		}
+		if (objectR)
+		{
+			hereScaleR += 0.05;
+
+		}
 		break;
 	//원점에 대하여 신축
 	case 'u':
-		Scale0 -= 0.05;
+		//Scale0 -= 0.05;
+		if (objectL)
+		{
+
+			Scale0L -= 0.05;
+		}
+		if (objectR)
+		{
+
+			Scale0R -= 0.05;
+		}
 		break;
 	case 'i':
-		Scale0 += 0.05;
+		//Scale0 += 0.05;
+		if (objectL)
+		{
+
+			Scale0L += 0.05;
+		}
+		if (objectR)
+		{
+
+			Scale0R += 0.05;
+		}
 		break;
 	//스파이럴 회전
 	case'r':
@@ -692,14 +747,21 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		yRotateSelect = 0;
 
 		//방향키 전체 도형 이동
-		xTransform = 0;
-		yTransform = 0;
-		zTransform = 0;
+		xTransformL = 0;
+		yTransformL = 0;
+		zTransformL = 0;
+		xTransformR = 0;
+		yTransformR = 0;
+		zTransformR = 0;
 
 		//키보드 제자리 신축
-		hereScale = 1;
+		//hereScale = 1;
+		hereScaleL = 1;
+		hereScaleR = 1;
 		//키보드 원점 기준 신축
-		Scale0 = 1;
+		//Scale0 = 1;
+		Scale0L = 1;
+		Scale0R = 1;
 
 
 		a = false;
@@ -727,6 +789,12 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		Move0 = false;
 		Move0Size = 0;
 		Move0Cnt = 0;
+		Move0XL = 0;
+		Move0YL = 0;
+		Move0ZL = 0;
+		Move0XR = 0;
+		Move0YR = 0;
+		Move0ZR = 0;
 
 		// 두 도형 원점 지나치고 왔다리 갔다리
 		Move0Pass = false;
@@ -784,7 +852,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		}
 		else
 		{
-			revolution = 2;
+			revolution = 0;
 		}
 		break;
 	case'3':
@@ -830,13 +898,26 @@ GLvoid SpecialKeys(int key, int x, int y)
 		break;
 	case GLUT_KEY_LEFT:
 		//xTransform -= 0.05;
-		xTransformL -= 0.05;
-		xTransformR -= 0.05;
+		if (objectL)
+		{
+			xTransformL -= 0.05;
+		}
+		if (objectR)
+		{
+			xTransformR -= 0.05;
+		}
+		
 		break;
 	case GLUT_KEY_RIGHT:
 		//xTransform += 0.05;
-		xTransformL += 0.05;
-		xTransformR += 0.05;
+		if (objectL)
+		{
+			xTransformL += 0.05;
+		}
+		if (objectR)
+		{
+			xTransformR += 0.05;
+		}
 		break;
 	}
 	glutPostRedisplay(); // 화면 갱신
