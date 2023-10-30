@@ -195,6 +195,81 @@ glm::vec3 cube7[12][3]{
 	{ {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
 	{ {0.5, 0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, -0.5, -0.5} },
 };
+glm::vec3 cube8[12][3]{
+	// 앞면
+	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5} },
+	{ {0.5, 0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, -0.5, -0.5} },
+
+	// 뒷면
+	{ {-0.5, -0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5} },
+
+	// 상단면
+	{ {-0.5, 0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, 0.5, -0.5} },
+
+	// 하단면
+	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, -0.5, 0.5} },
+	{ {0.5, -0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
+
+	// 왼쪽면
+	{ {-0.5, -0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, 0.5, 0.5} },
+	{ {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
+
+	// 오른쪽면
+	{ {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, -0.5, -0.5} },
+};
+glm::vec3 cube9[12][3]{
+	// 앞면
+	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5} },
+	{ {0.5, 0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, -0.5, -0.5} },
+
+	// 뒷면
+	{ {-0.5, -0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5} },
+
+	// 상단면
+	{ {-0.5, 0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, 0.5, -0.5} },
+
+	// 하단면
+	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, -0.5, 0.5} },
+	{ {0.5, -0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
+
+	// 왼쪽면
+	{ {-0.5, -0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, 0.5, 0.5} },
+	{ {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
+
+	// 오른쪽면
+	{ {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, -0.5, -0.5} },
+};
+glm::vec3 cube10[12][3]{
+	// 앞면
+	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5} },
+	{ {0.5, 0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, -0.5, -0.5} },
+
+	// 뒷면
+	{ {-0.5, -0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5} },
+
+	// 상단면
+	{ {-0.5, 0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, 0.5, -0.5} },
+
+	// 하단면
+	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, -0.5, 0.5} },
+	{ {0.5, -0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
+
+	// 왼쪽면
+	{ {-0.5, -0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, 0.5, 0.5} },
+	{ {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
+
+	// 오른쪽면
+	{ {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, -0.5, -0.5} },
+};
 
 GLfloat rectShape1[4][3] = {	//밑면
 	{-1,1,0},{-1,-1,0},{1,-1,0},{1,1,0}
@@ -310,6 +385,10 @@ bool doingJ = false;
 
 float wave = 0;
 bool waveCount = true;
+
+float boxX[3], boxY[3], boxZ[3];
+
+float characterX, characterY, characterZ;
 
 float B = 0;
 int BSelection = 0;
@@ -544,12 +623,25 @@ GLvoid drawScene()
 
 			Rfront = 180;	//무대 열기 타임 줄이기 위한 줄 -> 삭제하시오.
 		}
+		for (int i = 0; i < 3; i++)
+		{
+			boxX[i] = XYdis(gen);
+			boxY[i] = XYdis(gen);
+			boxZ[i] = XYdis(gen);
+		}
 		
 		start = false;
 	}
+	//캐릭터 위치
+	characterX = 0.0;
+	characterY = 0.0;
+	characterZ = 0.0;
+
+	characterX += d - a;
+	characterY += w - s;
+
 
 	model = glm::mat4(1.0f);
-
 	//축 그리기
 	for (int i = 0; i < 3; i++)
 	{
@@ -733,6 +825,16 @@ GLvoid drawScene()
 	model = glm::rotate(model, glm::radians(M), glm::vec3(0.0f, 0.0f, 1.0f));
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
+	//장애물 위로 올라가기
+	for (int i = 0; i < 3; i++)
+	{
+		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
+		{
+			characterZ = 0.2;
+		}
+	}
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
 	//상하좌우 이동
@@ -770,6 +872,16 @@ GLvoid drawScene()
 
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
+	//장애물 위로 올라가기
+	for (int i = 0; i < 3; i++)
+	{
+		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
+		{
+			characterZ = 0.2;
+		}
+	}
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
 	//상하좌우 이동
@@ -805,16 +917,49 @@ GLvoid drawScene()
 	
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
+	//장애물 위로 올라가기
+	for (int i = 0; i < 3; i++)
+	{
+		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
+		{
+			characterZ = 0.2;
+		}
+	}
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
+	switch (wasdDirection)
+	{
+	case 1:
+		model = glm::translate(model, glm::vec3(-0.08f, 0.0f, 0.0f));
+		break;
+	case 2:
+		model = glm::translate(model, glm::vec3(-0.04f, -0.0f, 0.0f));
+		break;
+	case 3:
+		break;
+	case 4:
+		model = glm::translate(model, glm::vec3(-0.04f, 0.04f, 0.0f));
+		break;
+	}
 	//상하좌우 이동
 	model = glm::translate(model, glm::vec3(d - a, w - s, 0.0f));
 	//이동
 	model = glm::translate(model, glm::vec3(0.04f, 0.0f, 0.15f));
 	//반동
-	model = glm::translate(model, glm::vec3(0.04f, 0.0f, 0.15f));
-	model = glm::rotate(model, glm::radians(wave), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::translate(model, glm::vec3(-0.04f, 0.0f, -0.15f));
+	if (wasdDirection == 1 || wasdDirection == 3)
+	{
+		model = glm::translate(model, glm::vec3(0.04f, 0.0f, 0.15f));
+		model = glm::rotate(model, glm::radians(wave), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(-0.04f, 0.0f, -0.15f));
+	}
+	if (wasdDirection == 2 || wasdDirection == 4)
+	{
+		model = glm::translate(model, glm::vec3(0.04f, 0.0f, 0.15f));
+		model = glm::rotate(model, glm::radians(wave), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(-0.04f, 0.0f, -0.15f));
+	}
 	//축소
 	model = glm::scale(model, glm::vec3(0.05, 0.05, 0.17));
 
@@ -844,16 +989,49 @@ GLvoid drawScene()
 	
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
+	//장애물 위로 올라가기
+	for (int i = 0; i < 3; i++)
+	{
+		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
+		{
+			characterZ = 0.2;
+		}
+	}
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
+	switch (wasdDirection)
+	{
+	case 1:
+		model = glm::translate(model, glm::vec3(0.08f, 0.0f, 0.0f));
+		break;
+	case 2:
+		model = glm::translate(model, glm::vec3(0.04f, 0.0f, 0.0f));
+		break;
+	case 3:
+		break;
+	case 4:
+		model = glm::translate(model, glm::vec3(0.04f, -0.04f, 0.0f));
+		break;
+	}
 	//상하좌우 이동
 	model = glm::translate(model, glm::vec3(d - a, w - s, 0.0f));
 	//이동
 	model = glm::translate(model, glm::vec3(-0.04f, 0.0f, 0.15f));
 	//반동
-	model = glm::translate(model, glm::vec3(-0.04f, 0.0f, 0.15f));
-	model = glm::rotate(model, glm::radians(-wave), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::translate(model, glm::vec3(0.04f, 0.0f, -0.15f));
+	if (wasdDirection == 1 || wasdDirection == 3)
+	{
+		model = glm::translate(model, glm::vec3(-0.04f, 0.0f, 0.15f));
+		model = glm::rotate(model, glm::radians(-wave), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(0.04f, 0.0f, -0.15f));
+	}
+	if (wasdDirection == 2 || wasdDirection == 4)
+	{
+		model = glm::translate(model, glm::vec3(-0.04f, 0.0f, 0.15f));
+		model = glm::rotate(model, glm::radians(-wave), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(0.04f, 0.0f, -0.15f));
+	}
 	//축소
 	model = glm::scale(model, glm::vec3(0.05, 0.05, 0.17));
 
@@ -883,6 +1061,16 @@ GLvoid drawScene()
 	
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
+	//장애물 위로 올라가기
+	for (int i = 0; i < 3; i++)
+	{
+		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
+		{
+			characterZ = 0.2;
+		}
+	}
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
 	switch (wasdDirection)
@@ -891,12 +1079,13 @@ GLvoid drawScene()
 		model = glm::translate(model, glm::vec3(-0.15f, 0.0f, 0.0f));
 		break;
 	case 2:
-		model = glm::translate(model, glm::vec3(-0.075f, 0.075f, 0.0f));
+		
+		model = glm::translate(model, glm::vec3(-0.075f, -0.075f, 0.0f));
 		break;
 	case 3:
 		break;
 	case 4:
-		model = glm::translate(model, glm::vec3(-0.075f, -0.075f, 0.0f));
+		model = glm::translate(model, glm::vec3(-0.075f, 0.075f, 0.0f));
 		break;
 	}
 	//model = glm::translate(model, glm::vec3(-0.075f, 0.0f, 0.32f));
@@ -945,6 +1134,16 @@ GLvoid drawScene()
 	model = glm::rotate(model, glm::radians(M), glm::vec3(0.0f, 0.0f, 1.0f));
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
+	//장애물 위로 올라가기
+	for (int i = 0; i < 3; i++)
+	{
+		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
+		{
+			characterZ = 0.2;
+		}
+	}
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
 	switch (wasdDirection)
@@ -965,7 +1164,7 @@ GLvoid drawScene()
 	model = glm::translate(model, glm::vec3(d - a, w - s, 0.0f));
 	//이동
 	model = glm::translate(model, glm::vec3(-0.075f, 0.0f, 0.32f));
-	//반동
+	//반동s
 	if (wasdDirection == 1 || wasdDirection == 3)
 	{
 		model = glm::translate(model, glm::vec3(-0.075f, 0.0f, 0.32f));
@@ -1006,6 +1205,16 @@ GLvoid drawScene()
 	model = glm::rotate(model, glm::radians(M), glm::vec3(0.0f, 0.0f, 1.0f));
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
+	//장애물 위로 올라가기
+	for (int i = 0; i < 3; i++)
+	{
+		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
+		{
+			characterZ = 0.2;
+		}
+	}
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
 	switch (wasdDirection)
@@ -1042,6 +1251,96 @@ GLvoid drawScene()
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &cube7[i][0], GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}
+	//------------------------------------장애물 그리기-----------------
+	//s r t p 코드 작성시에는 반대 방향으로.
+	model = glm::mat4(1.0f);
+	//M회전
+	model = glm::rotate(model, glm::radians(M), glm::vec3(0.0f, 0.0f, 1.0f));
+	//B이동
+	model = glm::translate(model, glm::vec3(B, 0, 0));
+	//이동
+	model = glm::translate(model, glm::vec3(boxX[0], boxY[0], 0.125f));
+	//축소
+	model = glm::scale(model, glm::vec3(0.3, 0.3, 0.3));
+
+	//장애물1
+	for (int i = 0; i < 12; i++) {
+		// modelTransform 변수에 변환 값 적용하기
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &colors4[i][0], GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &cube8[i][0], GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}
+	//------------------------------------장애물 그리기-----------------
+	//s r t p 코드 작성시에는 반대 방향으로.
+	model = glm::mat4(1.0f);
+	//M회전
+	model = glm::rotate(model, glm::radians(M), glm::vec3(0.0f, 0.0f, 1.0f));
+	//B이동
+	model = glm::translate(model, glm::vec3(B, 0, 0));
+	//이동
+	model = glm::translate(model, glm::vec3(boxX[1], boxY[1], 0.125f));
+	//축소
+	model = glm::scale(model, glm::vec3(0.3, 0.3, 0.3));
+
+	//장애물2
+	for (int i = 0; i < 12; i++) {
+		// modelTransform 변수에 변환 값 적용하기
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &colors4[i][0], GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &cube9[i][0], GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}
+	//------------------------------------장애물 그리기-----------------
+	//s r t p 코드 작성시에는 반대 방향으로.
+	model = glm::mat4(1.0f);
+	//M회전
+	model = glm::rotate(model, glm::radians(M), glm::vec3(0.0f, 0.0f, 1.0f));
+	//B이동
+	model = glm::translate(model, glm::vec3(B, 0, 0));
+	//이동
+	model = glm::translate(model, glm::vec3(boxX[2], boxY[2], 0.125f));
+	//축소
+	model = glm::scale(model, glm::vec3(0.3, 0.3, 0.3));
+
+	//장애물3
+	for (int i = 0; i < 12; i++) {
+		// modelTransform 변수에 변환 값 적용하기
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &colors4[i][0], GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &cube10[i][0], GL_STATIC_DRAW);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(0);
 
