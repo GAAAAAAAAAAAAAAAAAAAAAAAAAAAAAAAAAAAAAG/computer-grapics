@@ -377,6 +377,7 @@ bool frontSelection = false;
 float w, a, s, d;
 float speed = 0.04;
 int wasdDirection = 3;
+bool wasdPush = false;
 
 float J = 0;
 bool Jcount = true;
@@ -389,6 +390,7 @@ bool waveCount = true;
 float boxX[3], boxY[3], boxZ[3];
 
 float characterX, characterY, characterZ;
+bool boxOn = false;
 
 float B = 0;
 int BSelection = 0;
@@ -516,7 +518,10 @@ GLvoid drawScene()
 
 	if (RSelection == 1)
 	{
+		//cameraPos = glm::rotate(glm::mat4(1.0f), glm::radians(R), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(cameraPos, 1.0);
+		cameraPos = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -3.0f, 0.0f)) * glm::vec4(cameraPos, 1.0);
 		cameraPos = glm::rotate(glm::mat4(1.0f), glm::radians(R), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(cameraPos, 1.0);
+	
 	}
 	if (OSelection == 1)
 	{
@@ -629,6 +634,9 @@ GLvoid drawScene()
 			boxY[i] = XYdis(gen);
 			boxZ[i] = XYdis(gen);
 		}
+		cout << "1: 앞면이 좌우로 열린다" << endl;
+		cout << "r: 카메라가 현재 위치에서 화면 중심 y축을 기준으로 공전" << endl;
+		cout << "방향키 : 카메라 좌우 앞뒤로 이동한다." << endl;
 		
 		start = false;
 	}
@@ -640,6 +648,7 @@ GLvoid drawScene()
 	characterX += d - a;
 	characterY += w - s;
 
+	//장애물 위로 올라가기
 
 	model = glm::mat4(1.0f);
 	//축 그리기
@@ -826,15 +835,17 @@ GLvoid drawScene()
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
 	//장애물 위로 올라가기
-	for (int i = 0; i < 3; i++)
+	/*for (int i = 0; i < 3; i++)
 	{
 		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
 			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
 		{
 			characterZ = 0.2;
 		}
-	}
+	}*/
+
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
+
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
 	//상하좌우 이동
@@ -873,14 +884,14 @@ GLvoid drawScene()
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
 	//장애물 위로 올라가기
-	for (int i = 0; i < 3; i++)
+	/*for (int i = 0; i < 3; i++)
 	{
 		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
 			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
 		{
 			characterZ = 0.2;
 		}
-	}
+	}*/
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
@@ -918,14 +929,14 @@ GLvoid drawScene()
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
 	//장애물 위로 올라가기
-	for (int i = 0; i < 3; i++)
+	/*for (int i = 0; i < 3; i++)
 	{
 		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
 			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
 		{
 			characterZ = 0.2;
 		}
-	}
+	}*/
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
@@ -990,14 +1001,14 @@ GLvoid drawScene()
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
 	//장애물 위로 올라가기
-	for (int i = 0; i < 3; i++)
+	/*for (int i = 0; i < 3; i++)
 	{
 		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
 			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
 		{
 			characterZ = 0.2;
 		}
-	}
+	}*/
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
@@ -1062,14 +1073,14 @@ GLvoid drawScene()
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
 	//장애물 위로 올라가기
-	for (int i = 0; i < 3; i++)
+	/*for (int i = 0; i < 3; i++)
 	{
 		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
 			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
 		{
 			characterZ = 0.2;
 		}
-	}
+	}*/
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
@@ -1135,14 +1146,14 @@ GLvoid drawScene()
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
 	//장애물 위로 올라가기
-	for (int i = 0; i < 3; i++)
+	/*for (int i = 0; i < 3; i++)
 	{
 		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
 			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
 		{
 			characterZ = 0.2;
 		}
-	}
+	}*/
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
@@ -1206,14 +1217,14 @@ GLvoid drawScene()
 	//B이동
 	model = glm::translate(model, glm::vec3(B, 0, 0));
 	//장애물 위로 올라가기
-	for (int i = 0; i < 3; i++)
+	/*for (int i = 0; i < 3; i++)
 	{
 		if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
 			(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16))
 		{
 			characterZ = 0.2;
 		}
-	}
+	}*/
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, characterZ));
 	//점프
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, J));
@@ -1490,18 +1501,159 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		//d-a, w-s
 		w += speed;
 		wasdDirection = 1;
+
+		for (int i = 0; i < 3; i++)
+		{
+			if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+				(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16) && doingJ)
+			{
+				boxOn = true;
+				break;
+			}
+			if (!((characterX > boxX[i] - 0.16 || characterX < boxX[i] + 0.16) ||
+				(characterY > boxY[i] - 0.16 || characterY < boxY[i] + 0.16)))
+			{
+				boxOn = false;
+			}
+		}
+		if (!boxOn)
+		{
+			for (int i = 0; i < 3; i++)
+			{
+				if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+					(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16) &&
+					(!boxOn))
+				{
+					w-= speed;
+					break;
+				}
+			}
+		}
+		if (boxOn)
+		{
+			characterZ = 0.2;
+		}
+		else
+		{
+			characterZ = 0.0;
+		}
 		break;
 	case 'a':
 		a += speed;
 		wasdDirection = 2;
+		for (int i = 0; i < 3; i++)
+		{
+			if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+				(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16) && doingJ)
+			{
+				boxOn = true;
+				break;
+			}
+			if (!((characterX < boxX[i] - 0.16 || characterX > boxX[i] + 0.16) &&
+				(characterY < boxY[i] - 0.16 || characterY > boxY[i] + 0.16)))
+			{
+				boxOn = false;
+			}
+		}
+		if (!boxOn)
+		{
+			for (int i = 0; i < 3; i++)
+			{
+				if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+					(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16) &&
+					(!boxOn))
+				{
+					a -= speed;
+					break;
+				}
+			}
+		}
+		if (boxOn)
+		{
+			characterZ = 0.2;
+		}
+		else
+		{
+			characterZ = 0.0;
+		}
 		break;
 	case 's':
 		s += speed;
 		wasdDirection = 3;
+		for (int i = 0; i < 3; i++)
+		{
+			if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+				(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16) && doingJ)
+			{
+				boxOn = true;
+				break;
+			}
+			if (!((characterX < boxX[i] - 0.16 || characterX > boxX[i] + 0.16) &&
+				(characterY < boxY[i] - 0.16 || characterY > boxY[i] + 0.16)))
+			{
+				boxOn = false;
+			}
+		}
+		if (!boxOn)
+		{
+			for (int i = 0; i < 3; i++)
+			{
+				if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+					(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16) &&
+					(!boxOn))
+				{
+					s -= speed;
+					break;
+				}
+			}
+		}
+		if (boxOn)
+		{
+			characterZ = 0.2;
+		}
+		else
+		{
+			characterZ = 0.0;
+		}
 		break;
 	case 'd':
 		d += speed;
 		wasdDirection = 4;
+		for (int i = 0; i < 3; i++)
+		{
+			if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+				(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16) && doingJ)
+			{
+				boxOn = true;
+				break;
+			}
+			if (!((characterX < boxX[i] - 0.16 || characterX > boxX[i] + 0.16) &&
+				(characterY < boxY[i] - 0.16 || characterY > boxY[i] + 0.16)))
+			{
+				boxOn = false;
+			}
+		}
+		if (!boxOn)
+		{
+			for (int i = 0; i < 3; i++)
+			{
+				if ((characterX > boxX[i] - 0.16 && characterX < boxX[i] + 0.16) &&
+					(characterY > boxY[i] - 0.16 && characterY < boxY[i] + 0.16) &&
+					(!boxOn))
+				{
+					d -= speed;
+					break;
+				}
+			}
+		}
+		if (boxOn)
+		{
+			characterZ = 0.2;
+		}
+		else
+		{
+			characterZ = 0.0;
+		}
 		break;
 	case 'j':
 		if (!doingJ)
@@ -1509,6 +1661,30 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 			JSelection = true;
 			doingJ = true;
 		}
+		break;
+	case 'i':
+		J = 0;
+		Jcount = true;
+		JSelection = false;
+		doingJ = false;
+		wave = 0;
+		waveCount = true;
+		for (int i = 0; i < 3; i++)
+		{
+			boxX[i] = XYdis(gen);
+			boxY[i] = XYdis(gen);
+			boxZ[i] = XYdis(gen);
+		}
+		w = 0;
+		a = 0;
+		s = 0;
+		d = 0;
+		speed = 0.04;
+		wasdDirection = 3;
+		Rfront = 0;
+		frontSelection = false;
+		characterX = 0, characterY = 0, characterZ = 0;
+		boxOn = false;
 		break;
 	case 'b':
 		if (Bcnt)
@@ -1650,7 +1826,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		O += 1;
 		break;
 	case 'r':
-		cameraDirection = glm::vec3(0.0f, 0.0f, 0.0f);
+		cameraDirection = glm::vec3(0.0f, 0.0f, 0.5f);
 		if (rcnt)
 		{
 			RSelection = 1;
