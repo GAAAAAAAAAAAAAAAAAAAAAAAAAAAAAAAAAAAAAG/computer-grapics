@@ -6,6 +6,10 @@
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
+#include <gl/glm/glm.hpp>
+#include <gl/glm/ext.hpp>
+#include <gl/glm/gtc/matrix_transform.hpp>
+#include <cmath>
 #include <random>
 
 using namespace std;
@@ -17,6 +21,8 @@ uniform_real_distribution<double> colorDis(0.0, 1.0);
 uniform_int_distribution<int> polygonrandom(0, 2);
 uniform_int_distribution<int> directionrandom(0, 1);
 uniform_real_distribution<double> randomY(-0.5, 0.5);
+uniform_real_distribution<double> randomM(0.25, 0.75);
+uniform_real_distribution<double> randomSpeed(0.007, 0.02);
 
 
 struct TRISHAPE
@@ -25,6 +31,7 @@ struct TRISHAPE
 	GLfloat cX, cY;
 	bool alive = false;
 	double speed = 0.005;
+	double m = 0.03;
 	int direction = 0;
 };
 TRISHAPE t[100];
@@ -36,6 +43,7 @@ struct RECTSHAPE
 	GLfloat cX, cY;
 	bool alive = false;
 	double speed = 0.005;
+	double m = 0.03;
 	int direction = 0;
 };
 RECTSHAPE r[100];
@@ -47,10 +55,15 @@ struct PENTASHAPE
 	GLfloat cX, cY;
 	bool alive = false;
 	double speed = 0.005;
+	double m = 0.03;
 	int direction = 0;
 };
 PENTASHAPE p[100];
 int Pcnt = 0;
+
+GLfloat TdotShape[100][100][3] = {};
+GLfloat RdotShape[100][100][3] = {};
+GLfloat PdotShape[100][100][3] = {};
 
 //direction : (1,왼->오) (2,오->왼)
 
@@ -75,6 +88,8 @@ GLchar* vertexSource, * fragmentSource; //--- 소스코드 저장 변수
 GLuint vertexShader, fragmentShader; //--- 세이더 객체
 GLuint shaderProgramID; //--- 셰이더 프로그램
 
+glm::mat4 model = glm::mat4(1.0f);
+
 int windowWidth = 800;
 int windowHeight = 600;
 
@@ -85,9 +100,12 @@ bool start = true;
 double Size = 0.1;
 int createPolygon = 0;
 int createPolygonDirection = 0;
+double Allspeed = 0.0;
 
 double centerX, centerY;
 int cnt = 0;
+
+float polygonRotate = 0.0;
 
 bool LineFillMode = true;	//t : l, f : f
 
@@ -146,6 +164,9 @@ GLvoid drawScene()
 	//--- 사용할 VAO 불러오기
 	glBindVertexArray(vao);
 
+	int modelLocation = glGetUniformLocation(shaderProgramID, "model"); //--- 버텍스 세이더에서 모델링 변환 행렬 변수값을 받아온다.
+	
+
 	if (start)
 	{
 
@@ -166,11 +187,19 @@ GLvoid drawScene()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
+	
 	//삼각형 그리기
 	for (int i = 0; i < Tcnt; i++)
 	{
 		if (t[i].alive)
 		{
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(t[i].cX, t[i].cY, 0.0f));
+			model = glm::rotate(model, glm::radians(polygonRotate), glm::vec3(0.0f, 0.0f, 1.0f));
+			model = glm::translate(model, glm::vec3(-t[i].cX, -t[i].cY, 0.0f));
+
+			// modelTransform 변수에 변환 값 적용하기
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 			glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), t[i].triShape, GL_STATIC_DRAW);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -184,16 +213,37 @@ GLvoid drawScene()
 			{
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			}
-
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 		}
 	}
+	for (int i = 0; i < Tcnt; i++)
+	{
+		for (int j = 0; j < 100; j++)
+		{
+			model = glm::mat4(1.0f);// modelTransform 변수에 변환 값 적용하기
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+			glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), TdotShape[i][j], GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(0);
+			glPointSize(2.0);
+			glDrawArrays(GL_POINTS, 0, 1);
+		}
+	}
+	
 	// 사각형 그리기
 	for (int i = 0; i < Rcnt; i++)
 	{
 		if (r[i].alive)
 		{
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(r[i].cX, r[i].cY, 0.0f));
+			model = glm::rotate(model, glm::radians(polygonRotate), glm::vec3(0.0f, 0.0f, 1.0f));
+			model = glm::translate(model, glm::vec3(-r[i].cX, -r[i].cY, 0.0f));
+
+			// modelTransform 변수에 변환 값 적용하기
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 			glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), r[i].rectShape, GL_STATIC_DRAW);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -207,15 +257,34 @@ GLvoid drawScene()
 			{
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			}
+
+			//model = glm::mat4(1.0f);// modelTransform 변수에 변환 값 적용하기
+			//glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+			/*glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+			glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), r[i].dotShape[i], GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(0);
+			glPointSize(2.0);
+			glDrawArrays(GL_POINTS, 0, 1);*/
+
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 	}
+
 
 	// 오각형 그리기
 	for (int i = 0; i < Pcnt; i++)
 	{
 		if (p[i].alive)
 		{
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(p[i].cX, p[i].cY, 0.0f));
+			model = glm::rotate(model, glm::radians(polygonRotate), glm::vec3(0.0f, 0.0f, 1.0f));
+			model = glm::translate(model, glm::vec3(-p[i].cX, -p[i].cY, 0.0f));
+
+			// modelTransform 변수에 변환 값 적용하기
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 			glBufferData(GL_ARRAY_BUFFER, 15 * sizeof(GLfloat), p[i].pentaShape, GL_STATIC_DRAW);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -229,10 +298,25 @@ GLvoid drawScene()
 			{
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			}
+
+			//model = glm::mat4(1.0f);// modelTransform 변수에 변환 값 적용하기
+			//glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+			//glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+			//glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), p[i].dotShape[i], GL_STATIC_DRAW);
+			//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			//glEnableVertexAttribArray(0);
+			//glPointSize(2.0);
+			//glDrawArrays(GL_POINTS, 0, 1);
+
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 5);
 		}
 	}
 
+
+	model = glm::mat4(1.0f);
+	// modelTransform 변수에 변환 값 적용하기
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 	//박스 그리기
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -351,6 +435,12 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case 'f':
 		LineFillMode = false;
 		break;
+	case '=':
+		Allspeed += 0.001;
+		break;
+	case '-':
+		Allspeed -= 0.001;
+		break;
 	case 'q':
 		glutLeaveMainLoop();
 		break;
@@ -410,7 +500,112 @@ GLvoid TimerFunction(int value)
 	switch (value)
 	{
 	case 1:
+		polygonRotate += 1;
 
+		//포물선
+		//삼각형
+		for (int i = 0; i < Tcnt; i++)
+		{
+			if (t[i].alive)
+			{
+				if (t[i].direction == 0)
+				{
+					t[i].cX = t[i].cX + t[i].speed;
+				}
+				if (t[i].direction == 1)
+				{
+					t[i].cX = t[i].cX - t[i].speed;
+				}
+				t[i].cY = -t[i].m * (t[i].cX - 1.0)*(t[i].cX + 1.0);
+
+				t[i].triShape[0][0] = t[i].cX - Size;
+				t[i].triShape[0][1] = t[i].cY - Size;
+				t[i].triShape[1][0] = t[i].cX + Size;
+				t[i].triShape[1][1] = t[i].cY - Size;
+				t[i].triShape[2][0] = t[i].cX;
+				t[i].triShape[2][1] = t[i].cY + Size;
+
+				if (t[i].direction == 0 && t[i].cX > 1.0)
+				{
+					t[i].alive = false;
+				}
+				if (t[i].direction == 1 && t[i].cX < -1.0)
+				{
+					t[i].alive = false;
+				}
+			}
+		}
+
+		//사각형
+		for (int i = 0; i < Rcnt; i++)
+		{
+			if (r[i].alive)
+			{
+				if (r[i].direction == 0)
+				{
+					r[i].cX = r[i].cX + r[i].speed;
+				}
+				if (r[i].direction == 1)
+				{
+					r[i].cX = r[i].cX - r[i].speed;
+				}
+				r[i].cY = -r[i].m * (r[i].cX - 1.0) * (r[i].cX + 1.0);
+
+				r[i].rectShape[0][0] = r[i].cX - Size;
+				r[i].rectShape[0][1] = r[i].cY - Size;
+				r[i].rectShape[1][0] = r[i].cX + Size;
+				r[i].rectShape[1][1] = r[i].cY - Size;
+				r[i].rectShape[2][0] = r[i].cX + Size;
+				r[i].rectShape[2][1] = r[i].cY + Size;
+				r[i].rectShape[3][0] = r[i].cX - Size;
+				r[i].rectShape[3][1] = r[i].cY + Size;
+
+				if (r[i].direction == 0 && r[i].cX > 1.0)
+				{
+					r[i].alive = false;
+				}
+				if (r[i].direction == 1 && r[i].cX < -1.0)
+				{
+					r[i].alive = false;
+				}
+			}
+		}
+		//오각형
+		for (int i = 0; i < Pcnt; i++)
+		{
+			if (p[i].alive)
+			{
+				if (p[i].direction == 0)
+				{
+					p[i].cX = p[i].cX + p[i].speed;
+				}
+				if (p[i].direction == 1)
+				{
+					p[i].cX = p[i].cX - p[i].speed;
+				}
+				p[i].cY = -p[i].m * (p[i].cX - 1.0) * (p[i].cX + 1.0);
+
+				p[i].pentaShape[0][0] = p[i].cX - Size;
+				p[i].pentaShape[0][1] = p[i].cY - Size;
+				p[i].pentaShape[1][0] = p[i].cX + Size;
+				p[i].pentaShape[1][1] = p[i].cY - Size;
+				p[i].pentaShape[2][0] = p[i].cX + Size + Size / 2;
+				p[i].pentaShape[2][1] = p[i].cY + Size / 2;
+				p[i].pentaShape[3][0] = p[i].cX;
+				p[i].pentaShape[3][1] = p[i].cY + Size + Size / 2;
+				p[i].pentaShape[4][0] = p[i].cX - Size - Size / 2;
+				p[i].pentaShape[4][1] = p[i].cY + Size / 2;
+
+				if (p[i].direction == 0 && p[i].cX > 1.0)
+				{
+					p[i].alive = false;
+				}
+				if (p[i].direction == 1 && p[i].cX < -1.0)
+				{
+					p[i].alive = false;
+				}
+			}
+		}
 
 		//박스
 		if (boxDirection)
@@ -474,6 +669,8 @@ GLvoid TimerFunction(int value)
 			t[Tcnt].alive = true;
 
 			t[Tcnt].direction = createPolygonDirection;
+			t[Tcnt].m = randomM(gen);
+			t[Tcnt].speed = randomSpeed(gen);
 
 			Tcnt++;
 			break;
@@ -494,6 +691,8 @@ GLvoid TimerFunction(int value)
 			r[Rcnt].alive = true;
 
 			r[Rcnt].direction = createPolygonDirection;
+			r[Rcnt].m = randomM(gen);
+			r[Rcnt].speed = randomSpeed(gen);
 
 			Rcnt++;
 			break;
@@ -516,6 +715,8 @@ GLvoid TimerFunction(int value)
 			p[Pcnt].alive = true;
 
 			p[Pcnt].direction = createPolygonDirection;
+			p[Pcnt].m = randomM(gen);
+			p[Pcnt].speed = randomSpeed(gen);
 
 			Pcnt++;
 			break;
@@ -524,5 +725,4 @@ GLvoid TimerFunction(int value)
 		break;
 	}
 	glutPostRedisplay();
-	
 }
