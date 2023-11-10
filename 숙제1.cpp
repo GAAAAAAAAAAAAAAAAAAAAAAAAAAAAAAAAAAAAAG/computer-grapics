@@ -24,7 +24,7 @@ struct TRISHAPE
 	GLfloat triShape[3][3];
 	GLfloat cX, cY;
 	bool alive = false;
-	bool animation = false;
+	double speed = 0.005;
 	int direction = 0;
 };
 TRISHAPE t[100];
@@ -35,7 +35,7 @@ struct RECTSHAPE
 	GLfloat rectShape[4][3];
 	GLfloat cX, cY;
 	bool alive = false;
-	bool animation = false;
+	double speed = 0.005;
 	int direction = 0;
 };
 RECTSHAPE r[100];
@@ -46,7 +46,7 @@ struct PENTASHAPE
 	GLfloat pentaShape[5][3];
 	GLfloat cX, cY;
 	bool alive = false;
-	bool animation = false;
+	double speed = 0.005;
 	int direction = 0;
 };
 PENTASHAPE p[100];
@@ -82,12 +82,14 @@ float openGLX, openGLY;
 int movingRectangle = -1;
 
 bool start = true;
-double Size = 0.075;
+double Size = 0.1;
 int createPolygon = 0;
 int createPolygonDirection = 0;
 
 double centerX, centerY;
 int cnt = 0;
+
+bool LineFillMode = true;	//t : l, f : f
 
 void make_shaderProgram();
 void make_vertexShaders();
@@ -174,8 +176,14 @@ GLvoid drawScene()
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 			glEnableVertexAttribArray(0);
 
-			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			if (LineFillMode)
+			{
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			}
+			if (!LineFillMode)
+			{
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			}
 
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 		}
@@ -191,8 +199,14 @@ GLvoid drawScene()
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 			glEnableVertexAttribArray(0);
 
-			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			if (LineFillMode)
+			{
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			}
+			if (!LineFillMode)
+			{
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			}
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 	}
@@ -207,8 +221,14 @@ GLvoid drawScene()
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 			glEnableVertexAttribArray(0);
 
-			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			if (LineFillMode)
+			{
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			}
+			if (!LineFillMode)
+			{
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			}
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 5);
 		}
 	}
@@ -220,8 +240,14 @@ GLvoid drawScene()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	if (LineFillMode)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+	if (!LineFillMode)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	glutSwapBuffers(); //--- 화면에 출력하기
@@ -319,6 +345,12 @@ char* filetobuf(const char* file)
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
+	case 'l':
+		LineFillMode = true;
+		break;
+	case 'f':
+		LineFillMode = false;
+		break;
 	case 'q':
 		glutLeaveMainLoop();
 		break;
