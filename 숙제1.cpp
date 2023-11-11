@@ -781,9 +781,9 @@ GLvoid Mouse(int button, int state, int x, int y)
 					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1], p[i].pentaShape[4][0], p[i].pentaShape[4][1]);
 					nt[NTcnt - 1].direction = 2;
 					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
-					nt[NTcnt - 1].direction = 3;
+					nt[NTcnt - 1].direction = 4;
 					NewTriangleCreate(p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[2][0], p[i].pentaShape[2][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
-					nt[NTcnt - 1].direction = 2;
+					nt[NTcnt - 1].direction = 3;
 				}
 				else if (checkCollision(p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[2][0], p[i].pentaShape[2][1]))
 				{
@@ -791,9 +791,9 @@ GLvoid Mouse(int button, int state, int x, int y)
 					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1], p[i].pentaShape[4][0], p[i].pentaShape[4][1]);
 					nt[NTcnt - 1].direction = 2;
 					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
-					nt[NTcnt - 1].direction = 3;
+					nt[NTcnt - 1].direction = 4;
 					NewTriangleCreate(p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[2][0], p[i].pentaShape[2][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
-					nt[NTcnt - 1].direction = 2;
+					nt[NTcnt - 1].direction = 3;
 				}
 				else if (checkCollision(p[i].pentaShape[2][0], p[i].pentaShape[2][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]))
 				{
@@ -801,9 +801,9 @@ GLvoid Mouse(int button, int state, int x, int y)
 					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1], p[i].pentaShape[4][0], p[i].pentaShape[4][1]);
 					nt[NTcnt - 1].direction = 2;
 					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
-					nt[NTcnt - 1].direction = 3;
+					nt[NTcnt - 1].direction = 4;
 					NewTriangleCreate(p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[2][0], p[i].pentaShape[2][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
-					nt[NTcnt - 1].direction = 2;
+					nt[NTcnt - 1].direction = 3;
 				}
 				else if (checkCollision(p[i].pentaShape[3][0], p[i].pentaShape[3][1], p[i].pentaShape[4][0], p[i].pentaShape[4][1]))
 				{
@@ -811,9 +811,9 @@ GLvoid Mouse(int button, int state, int x, int y)
 					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1], p[i].pentaShape[4][0], p[i].pentaShape[4][1]);
 					nt[NTcnt - 1].direction = 2;
 					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
-					nt[NTcnt - 1].direction = 3;
+					nt[NTcnt - 1].direction = 4;
 					NewTriangleCreate(p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[2][0], p[i].pentaShape[2][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
-					nt[NTcnt - 1].direction = 2;
+					nt[NTcnt - 1].direction = 3;
 				}
 				else if (checkCollision(p[i].pentaShape[4][0], p[i].pentaShape[4][1], p[i].pentaShape[0][0], p[i].pentaShape[0][1]))
 				{
@@ -821,14 +821,12 @@ GLvoid Mouse(int button, int state, int x, int y)
 					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1], p[i].pentaShape[4][0], p[i].pentaShape[4][1]);
 					nt[NTcnt - 1].direction = 2;
 					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
-					nt[NTcnt - 1].direction = 3;
+					nt[NTcnt - 1].direction = 4;
 					NewTriangleCreate(p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[2][0], p[i].pentaShape[2][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
-					nt[NTcnt - 1].direction = 2;
+					nt[NTcnt - 1].direction = 3;
 				}
 			}
 		}
-
-		
 
 		lineShape[0][0] = -1.0;
 		lineShape[0][1] = -1.0;
@@ -873,57 +871,76 @@ GLvoid TimerFunction(int value)
 				{
 					if (nt[i].direction == 2)
 					{
-						nt[i].triShape[0][0] -= 0.001;
-						nt[i].triShape[0][1] -= 0.008;
-						nt[i].triShape[1][0] -= 0.001;
-						nt[i].triShape[1][1] -= 0.008;
-						nt[i].triShape[2][0] -= 0.001;
-						nt[i].triShape[2][1] -= 0.008;
-						nt[i].cX -= 0.001;
-						nt[i].cY -= 0.008;
-
-						/*if (nt[i].speed + Allspeed > 0.001)
+						if (nt[i].speed + Allspeed > 0.001)
 						{
-							nt[i].cX = nt[i].cX + nt[i].speed + Allspeed;
+							nt[i].triShape[0][0] -= (nt[i].speed + Allspeed) / 4;
+							nt[i].triShape[0][1] -= (nt[i].speed + Allspeed);
+							nt[i].triShape[1][0] -= (nt[i].speed + Allspeed) / 4;
+							nt[i].triShape[1][1] -= (nt[i].speed + Allspeed);
+							nt[i].triShape[2][0] -= (nt[i].speed + Allspeed) / 4;
+							nt[i].triShape[2][1] -= (nt[i].speed + Allspeed);
+							nt[i].cX -= (nt[i].speed + Allspeed) / 4;
+							nt[i].cY -= (nt[i].speed + Allspeed);
 						}
 						else
 						{
-							nt[i].cX = nt[i].cX + 0.001;
-						}*/
+							nt[i].triShape[0][0] -= (0.001) / 4;
+							nt[i].triShape[0][1] -= (0.001);
+							nt[i].triShape[1][0] -= (0.001) / 4;
+							nt[i].triShape[1][1] -= (0.001);
+							nt[i].triShape[2][0] -= (0.001) / 4;
+							nt[i].triShape[2][1] -= (0.001);
+							nt[i].cX -= (0.001) / 4;
+							nt[i].cY -= (0.001);
+						}
 					}
 					if (nt[i].direction == 3)
 					{
-						nt[i].triShape[0][0] += 0.001;
-						nt[i].triShape[0][1] -= 0.008;
-						nt[i].triShape[1][0] += 0.001;
-						nt[i].triShape[1][1] -= 0.008;
-						nt[i].triShape[2][0] += 0.001;
-						nt[i].triShape[2][1] -= 0.008;
-						nt[i].cX += 0.001;
-						nt[i].cY -= 0.008;
-						/*if (nt[i].speed + Allspeed > 0.001)
+						if (nt[i].speed + Allspeed > 0.001)
 						{
-							nt[i].cX = nt[i].cX - nt[i].speed - Allspeed;
+							nt[i].triShape[0][0] += (nt[i].speed + Allspeed) / 4;
+							nt[i].triShape[0][1] -= (nt[i].speed + Allspeed);
+							nt[i].triShape[1][0] += (nt[i].speed + Allspeed) / 4;
+							nt[i].triShape[1][1] -= (nt[i].speed + Allspeed);
+							nt[i].triShape[2][0] += (nt[i].speed + Allspeed) / 4;
+							nt[i].triShape[2][1] -= (nt[i].speed + Allspeed);
+							nt[i].cX += (nt[i].speed + Allspeed) / 4;
+							nt[i].cY -= (nt[i].speed + Allspeed);
 						}
 						else
 						{
-							nt[i].cX = nt[i].cX - 0.001;
-						}*/
+							nt[i].triShape[0][0] += (0.001) / 4;
+							nt[i].triShape[0][1] -= (0.001);
+							nt[i].triShape[1][0] += (0.001) / 4;
+							nt[i].triShape[1][1] -= (0.001);
+							nt[i].triShape[2][0] += (0.001) / 4;
+							nt[i].triShape[2][1] -= (0.001);
+							nt[i].cX += (0.001) / 4;
+							nt[i].cY -= (0.001);
+						}
 					}
-					/*nt[i].cY = nt[i].cY - 0.001;
-
-					nt[i].triShape[0][0] = nt[i].cX - Size;
-					nt[i].triShape[0][1] = nt[i].cY - Size;
-					nt[i].triShape[1][0] = nt[i].cX + Size;
-					nt[i].triShape[1][1] = nt[i].cY - Size;
-					nt[i].triShape[2][0] = nt[i].cX;
-					nt[i].triShape[2][1] = nt[i].cY + Size;*/
+					if (nt[i].direction == 4)
+					{
+						if (nt[i].speed + Allspeed > 0.001)
+						{
+							nt[i].triShape[0][1] -= (nt[i].speed + Allspeed);
+							nt[i].triShape[1][1] -= (nt[i].speed + Allspeed);
+							nt[i].triShape[2][1] -= (nt[i].speed + Allspeed);
+							nt[i].cY -= (nt[i].speed + Allspeed);
+						}
+						else
+						{
+							nt[i].triShape[0][1] -= (0.001);
+							nt[i].triShape[1][1] -= (0.001);
+							nt[i].triShape[2][1] -= (0.001);
+							nt[i].cY -= (0.001);
+						}
+					}
 					if (nt[i].cY < -1.0)
 					{
 						nt[i].alive = false;
 					}
 				}
-				
 				if (nt[i].cX > box[0][0] && nt[i].cX < box[1][0] && nt[i].cY > box[0][1] && nt[i].cY < box[2][1])
 				{
 					nt[i].animation = false;
