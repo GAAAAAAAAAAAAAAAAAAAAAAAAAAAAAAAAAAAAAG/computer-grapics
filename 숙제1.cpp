@@ -21,7 +21,7 @@ uniform_real_distribution<double> colorDis(0.0, 1.0);
 uniform_int_distribution<int> polygonrandom(0, 2);
 uniform_int_distribution<int> directionrandom(0, 1);
 uniform_real_distribution<double> randomY(-0.5, 0.5);
-uniform_real_distribution<double> randomM(0.25, 0.75);
+uniform_real_distribution<double> randomM(0.25, 0.70);
 uniform_real_distribution<double> randomSpeed(0.007, 0.02);
 
 struct TRISHAPE
@@ -31,8 +31,11 @@ struct TRISHAPE
 	bool alive = false;
 	double speed = 0.005;
 	double m = 0.03;
-	int direction = 0;
+	int direction = 0; 
+	GLfloat C;
+	glm::vec3 colors[3] = {};
 };
+
 TRISHAPE t[100];
 int Tcnt = 0;
 
@@ -44,6 +47,8 @@ struct RECTSHAPE
 	double speed = 0.005;
 	double m = 0.03;
 	int direction = 0;
+	GLfloat C;
+	glm::vec3 colors[4] = {};
 };
 RECTSHAPE r[100];
 int Rcnt = 0;
@@ -56,9 +61,27 @@ struct PENTASHAPE
 	double speed = 0.005;
 	double m = 0.03;
 	int direction = 0;
+	GLfloat C;
+	glm::vec3 colors[5] = {};
 };
 PENTASHAPE p[100];
 int Pcnt = 0;
+
+struct NEWTRISHAPE
+{
+	GLfloat triShape[3][3];
+	GLfloat cX, cY;
+	bool alive = false;
+	double speed = 0.005;
+	double m = 0.03;
+	int direction = 0;
+	bool animation = true;
+	GLfloat C;
+	int timeout = 1;
+	glm::vec3 colors[3] = {};
+};
+NEWTRISHAPE nt[10000];
+int NTcnt = 0;
 
 
 GLfloat TdotShape[100][1000][3] = {};
@@ -87,6 +110,8 @@ GLfloat colors[5][3] = { //--- 삼각형 꼭지점 색상
 	{ 0.0, 0.0, 0.0 }
 };
 GLfloat dotColors[3] = { 0.7, 0.7, 1.0 };
+glm::vec3 pathColors {};
+glm::vec3 boxColors[4];
 
 GLuint vao, vbo[2];
 GLuint TriPosVbo, TriColorVbo;
@@ -120,7 +145,7 @@ float polygonRotate = 0.0;
 bool LineFillMode = true;	//t : l, f : f
 
 struct Point {
-	float x, y;
+	GLfloat x, y;
 };
 
 void make_shaderProgram();
@@ -136,7 +161,8 @@ GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y);
 GLvoid Motion(int x, int y);
 GLvoid TimerFunction(int value);
 GLvoid SpecialKeys(int key, int x, int y);
-void CrossDot();
+int checkCollision(GLfloat a1, GLfloat b1, GLfloat a2, GLfloat b2);
+void NewTriangleCreate(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, GLfloat x3, GLfloat y3);
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
@@ -182,18 +208,33 @@ GLvoid drawScene()
 
 	modelLocation = glGetUniformLocation(shaderProgramID, "model"); //--- 버텍스 세이더에서 모델링 변환 행렬 변수값을 받아온다.
 	
-
 	if (start)
 	{
-
 		box[0][0] = -0.3;
-		box[0][1] = -0.8;
+		box[0][1] = -0.9;
 		box[1][0] = 0.3;
-		box[1][1] = -0.8;
+		box[1][1] = -0.9;
 		box[2][0] = 0.3;
 		box[2][1] = -0.7;
 		box[3][0] = -0.3;
 		box[3][1] = -0.7;
+
+		pathColors.x = 0.0;
+		pathColors.y = 0.0;
+		pathColors.z = 0.0;
+
+		boxColors[0].x = 0.0;
+		boxColors[0].y = 0.0;
+		boxColors[0].z = 0.0;
+		boxColors[1].x = 0.0;
+		boxColors[1].y = 0.0;
+		boxColors[1].z = 0.0;
+		boxColors[2].x = 0.0;
+		boxColors[2].y = 0.0;
+		boxColors[2].z = 0.0;
+		boxColors[3].x = 0.0;
+		boxColors[3].y = 0.0;
+		boxColors[3].z = 0.0;
 
 		start = false;
 	}
@@ -217,6 +258,35 @@ GLvoid drawScene()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 	
+	//new 삼각형 그리기
+	for (int i = 0; i < NTcnt; i++)
+	{
+		if (nt[i].alive)
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+			glBufferData(GL_ARRAY_BUFFER, 15 * sizeof(GLfloat), &nt[i].colors, GL_STATIC_DRAW);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(1);
+
+			// modelTransform 변수에 변환 값 적용하기
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+			glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), nt[i].triShape, GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(0);
+
+			if (LineFillMode)
+			{
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			}
+			if (!LineFillMode)
+			{
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			}
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+		}
+	}
+
 	//삼각형 그리기
 	for (int i = 0; i < Tcnt; i++)
 	{
@@ -226,6 +296,12 @@ GLvoid drawScene()
 			model = glm::translate(model, glm::vec3(t[i].cX, t[i].cY, 0.0f));
 			model = glm::rotate(model, glm::radians(polygonRotate), glm::vec3(0.0f, 0.0f, 1.0f));
 			model = glm::translate(model, glm::vec3(-t[i].cX, -t[i].cY, 0.0f));
+
+			//색상
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+			glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), &t[i].colors, GL_STATIC_DRAW);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(1);
 
 			// modelTransform 변수에 변환 값 적용하기
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
@@ -257,6 +333,11 @@ GLvoid drawScene()
 					model = glm::mat4(1.0f);// modelTransform 변수에 변환 값 적용하기
 					glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 
+					glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+					glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), &pathColors, GL_STATIC_DRAW);
+					glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+					glEnableVertexAttribArray(1);
+
 					glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 					glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), TdotShape[i][j], GL_STATIC_DRAW);
 					glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -282,6 +363,11 @@ GLvoid drawScene()
 			model = glm::rotate(model, glm::radians(polygonRotate), glm::vec3(0.0f, 0.0f, 1.0f));
 			model = glm::translate(model, glm::vec3(-r[i].cX, -r[i].cY, 0.0f));
 
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+			glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), &r[i].colors, GL_STATIC_DRAW);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(1);
+
 			// modelTransform 변수에 변환 값 적용하기
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -297,7 +383,6 @@ GLvoid drawScene()
 			{
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			}
-
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 	}
@@ -312,6 +397,11 @@ GLvoid drawScene()
 				{
 					model = glm::mat4(1.0f);// modelTransform 변수에 변환 값 적용하기
 					glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+					glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+					glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), &pathColors, GL_STATIC_DRAW);
+					glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+					glEnableVertexAttribArray(1);
 
 					glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 					glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), RdotShape[i][j], GL_STATIC_DRAW);
@@ -328,7 +418,6 @@ GLvoid drawScene()
 		}
 	}
 	
-
 	// 오각형 그리기
 	for (int i = 0; i < Pcnt; i++)
 	{
@@ -338,6 +427,11 @@ GLvoid drawScene()
 			model = glm::translate(model, glm::vec3(p[i].cX, p[i].cY, 0.0f));
 			model = glm::rotate(model, glm::radians(polygonRotate), glm::vec3(0.0f, 0.0f, 1.0f));
 			model = glm::translate(model, glm::vec3(-p[i].cX, -p[i].cY, 0.0f));
+
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+			glBufferData(GL_ARRAY_BUFFER, 15 * sizeof(GLfloat), &p[i].colors, GL_STATIC_DRAW);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(1);
 
 			// modelTransform 변수에 변환 값 적용하기
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
@@ -369,6 +463,11 @@ GLvoid drawScene()
 					model = glm::mat4(1.0f);// modelTransform 변수에 변환 값 적용하기
 					glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 
+					glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+					glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), &pathColors, GL_STATIC_DRAW);
+					glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+					glEnableVertexAttribArray(1);
+
 					glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 					glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), PdotShape[i][j], GL_STATIC_DRAW);
 					glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -387,7 +486,13 @@ GLvoid drawScene()
 	model = glm::mat4(1.0f);
 	// modelTransform 변수에 변환 값 적용하기
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+	
 	//박스 그리기
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), &boxColors, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), box, GL_STATIC_DRAW);
@@ -517,6 +622,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		LineFillMode = false;
 		break;
 	case '=':
+	case '+':
 		Allspeed += 0.001;
 		break;
 	case '-':
@@ -551,6 +657,179 @@ GLvoid Mouse(int button, int state, int x, int y)
 	{
 		WindowToOpenGL(x, y, openGLX, openGLY);
 		movingMouse = -1;
+		//새로운 삼각형 시간차 두기
+		for (int i = 0; i < NTcnt; i++)
+		{
+			if (nt[i].alive)
+			{
+				if (nt[i].timeout > 0)
+				{
+					nt[i].timeout -= 1;
+				}
+			}
+		}
+		//새로운 삼각형 자르기
+		for (int i = 0; i < NTcnt; i++)
+		{
+			if (nt[i].alive && nt[i].timeout == 0)
+			{
+				if (checkCollision(nt[i].triShape[0][0], nt[i].triShape[0][1], nt[i].triShape[1][0], nt[i].triShape[1][1]))
+				{
+					nt[i].alive = false;
+					NewTriangleCreate(nt[i].triShape[0][0], nt[i].triShape[0][1], (nt[i].triShape[0][0] + nt[i].triShape[1][0]) / 2, (nt[i].triShape[0][1] + nt[i].triShape[1][1]) / 2, nt[i].triShape[2][0], nt[i].triShape[2][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate((nt[i].triShape[0][0] + nt[i].triShape[1][0]) / 2, (nt[i].triShape[0][1] + nt[i].triShape[1][1]) / 2, nt[i].triShape[1][0], nt[i].triShape[1][1], nt[i].triShape[2][0], nt[i].triShape[2][1]);
+					nt[NTcnt - 1].direction = 3;
+				}
+				else if (checkCollision(nt[i].triShape[1][0], nt[i].triShape[1][1], nt[i].triShape[2][0], nt[i].triShape[2][1]))
+				{
+					nt[i].alive = false;
+					NewTriangleCreate(nt[i].triShape[0][0], nt[i].triShape[0][1], (nt[i].triShape[0][0] + nt[i].triShape[1][0]) / 2, (nt[i].triShape[0][1] + nt[i].triShape[1][1]) / 2, nt[i].triShape[2][0], nt[i].triShape[2][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate((nt[i].triShape[0][0] + nt[i].triShape[1][0]) / 2, (nt[i].triShape[0][1] + nt[i].triShape[1][1]) / 2, nt[i].triShape[1][0], nt[i].triShape[1][1], nt[i].triShape[2][0], nt[i].triShape[2][1]);
+					nt[NTcnt - 1].direction = 3;
+				}
+				else if (checkCollision(nt[i].triShape[2][0], nt[i].triShape[2][1], nt[i].triShape[0][0], nt[i].triShape[0][1]))
+				{
+					nt[i].alive = false;
+					NewTriangleCreate(nt[i].triShape[0][0], nt[i].triShape[0][1], (nt[i].triShape[0][0] + nt[i].triShape[1][0]) / 2, (nt[i].triShape[0][1] + nt[i].triShape[1][1]) / 2, nt[i].triShape[2][0], nt[i].triShape[2][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate((nt[i].triShape[0][0] + nt[i].triShape[1][0]) / 2, (nt[i].triShape[0][1] + nt[i].triShape[1][1]) / 2, nt[i].triShape[1][0], nt[i].triShape[1][1], nt[i].triShape[2][0], nt[i].triShape[2][1]);
+					nt[NTcnt - 1].direction = 3;
+				}
+			}
+		}
+
+		//삼각형 자르기
+		for (int i = 0; i < Tcnt; i++)
+		{
+			if (t[i].alive)
+			{
+				if (checkCollision(t[i].triShape[0][0], t[i].triShape[0][1], t[i].triShape[1][0], t[i].triShape[1][1]))
+				{
+					t[i].alive = false;
+					NewTriangleCreate(t[i].triShape[0][0], t[i].triShape[0][1], (t[i].triShape[0][0] + t[i].triShape[1][0]) / 2, (t[i].triShape[0][1] + t[i].triShape[1][1]) / 2, t[i].triShape[2][0], t[i].triShape[2][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate((t[i].triShape[0][0] + t[i].triShape[1][0]) / 2, (t[i].triShape[0][1] + t[i].triShape[1][1]) / 2, t[i].triShape[1][0], t[i].triShape[1][1], t[i].triShape[2][0], t[i].triShape[2][1]);
+					nt[NTcnt - 1].direction = 3;
+				}
+				else if (checkCollision(t[i].triShape[1][0], t[i].triShape[1][1], t[i].triShape[2][0], t[i].triShape[2][1]))
+				{
+					t[i].alive = false;
+					NewTriangleCreate(t[i].triShape[0][0], t[i].triShape[0][1], (t[i].triShape[0][0] + t[i].triShape[1][0]) / 2, (t[i].triShape[0][1] + t[i].triShape[1][1]) / 2, t[i].triShape[2][0], t[i].triShape[2][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate((t[i].triShape[0][0] + t[i].triShape[1][0]) / 2, (t[i].triShape[0][1] + t[i].triShape[1][1]) / 2, t[i].triShape[1][0], t[i].triShape[1][1], t[i].triShape[2][0], t[i].triShape[2][1]);
+					nt[NTcnt - 1].direction = 3;
+				}
+				else if (checkCollision(t[i].triShape[2][0], t[i].triShape[2][1], t[i].triShape[0][0], t[i].triShape[0][1]))
+				{
+					t[i].alive = false;
+					NewTriangleCreate(t[i].triShape[0][0], t[i].triShape[0][1], (t[i].triShape[0][0] + t[i].triShape[1][0]) / 2, (t[i].triShape[0][1] + t[i].triShape[1][1]) / 2, t[i].triShape[2][0], t[i].triShape[2][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate((t[i].triShape[0][0] + t[i].triShape[1][0]) / 2, (t[i].triShape[0][1] + t[i].triShape[1][1]) / 2, t[i].triShape[1][0], t[i].triShape[1][1], t[i].triShape[2][0], t[i].triShape[2][1]);
+					nt[NTcnt - 1].direction = 3;
+				}
+			}
+		}
+		//사각형 자르기
+		for (int i = 0; i < Rcnt; i++)
+		{
+			if (r[i].alive)
+			{
+				if (checkCollision(r[i].rectShape[0][0], r[i].rectShape[0][1], r[i].rectShape[1][0], r[i].rectShape[1][1]))
+				{
+					r[i].alive = false;
+					NewTriangleCreate(r[i].rectShape[0][0], r[i].rectShape[0][1], r[i].rectShape[1][0], r[i].rectShape[1][1], r[i].rectShape[3][0], r[i].rectShape[3][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate(r[i].rectShape[1][0], r[i].rectShape[1][1], r[i].rectShape[2][0], r[i].rectShape[2][1], r[i].rectShape[3][0], r[i].rectShape[3][1]);
+					nt[NTcnt - 1].direction = 3;
+				}
+				else if (checkCollision(r[i].rectShape[1][0], r[i].rectShape[1][1], r[i].rectShape[2][0], r[i].rectShape[2][1]))
+				{
+					r[i].alive = false;
+					NewTriangleCreate(r[i].rectShape[0][0], r[i].rectShape[0][1], r[i].rectShape[1][0], r[i].rectShape[1][1], r[i].rectShape[3][0], r[i].rectShape[3][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate(r[i].rectShape[1][0], r[i].rectShape[1][1], r[i].rectShape[2][0], r[i].rectShape[2][1], r[i].rectShape[3][0], r[i].rectShape[3][1]);
+					nt[NTcnt - 1].direction = 3;
+				}
+				else if (checkCollision(r[i].rectShape[2][0], r[i].rectShape[2][1], r[i].rectShape[3][0], r[i].rectShape[3][1]))
+				{
+					r[i].alive = false;
+					NewTriangleCreate(r[i].rectShape[0][0], r[i].rectShape[0][1], r[i].rectShape[1][0], r[i].rectShape[1][1], r[i].rectShape[3][0], r[i].rectShape[3][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate(r[i].rectShape[1][0], r[i].rectShape[1][1], r[i].rectShape[2][0], r[i].rectShape[2][1], r[i].rectShape[3][0], r[i].rectShape[3][1]);
+					nt[NTcnt - 1].direction = 3;
+				}
+				else if (checkCollision(r[i].rectShape[3][0], r[i].rectShape[3][1], r[i].rectShape[0][0], r[i].rectShape[0][1]))
+				{
+					r[i].alive = false;
+					NewTriangleCreate(r[i].rectShape[0][0], r[i].rectShape[0][1], r[i].rectShape[1][0], r[i].rectShape[1][1], r[i].rectShape[3][0], r[i].rectShape[3][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate(r[i].rectShape[1][0], r[i].rectShape[1][1], r[i].rectShape[2][0], r[i].rectShape[2][1], r[i].rectShape[3][0], r[i].rectShape[3][1]);
+					nt[NTcnt - 1].direction = 3;
+				}
+			}
+		}
+		//오각형 자르기
+		for (int i = 0; i < Pcnt; i++)
+		{
+			if (p[i].alive)
+			{
+				if (checkCollision(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[1][0], p[i].pentaShape[1][1]))
+				{
+					p[i].alive = false;
+					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1], p[i].pentaShape[4][0], p[i].pentaShape[4][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
+					nt[NTcnt - 1].direction = 3;
+					NewTriangleCreate(p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[2][0], p[i].pentaShape[2][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
+					nt[NTcnt - 1].direction = 2;
+				}
+				else if (checkCollision(p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[2][0], p[i].pentaShape[2][1]))
+				{
+					p[i].alive = false;
+					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1], p[i].pentaShape[4][0], p[i].pentaShape[4][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
+					nt[NTcnt - 1].direction = 3;
+					NewTriangleCreate(p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[2][0], p[i].pentaShape[2][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
+					nt[NTcnt - 1].direction = 2;
+				}
+				else if (checkCollision(p[i].pentaShape[2][0], p[i].pentaShape[2][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]))
+				{
+					p[i].alive = false;
+					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1], p[i].pentaShape[4][0], p[i].pentaShape[4][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
+					nt[NTcnt - 1].direction = 3;
+					NewTriangleCreate(p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[2][0], p[i].pentaShape[2][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
+					nt[NTcnt - 1].direction = 2;
+				}
+				else if (checkCollision(p[i].pentaShape[3][0], p[i].pentaShape[3][1], p[i].pentaShape[4][0], p[i].pentaShape[4][1]))
+				{
+					p[i].alive = false;
+					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1], p[i].pentaShape[4][0], p[i].pentaShape[4][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
+					nt[NTcnt - 1].direction = 3;
+					NewTriangleCreate(p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[2][0], p[i].pentaShape[2][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
+					nt[NTcnt - 1].direction = 2;
+				}
+				else if (checkCollision(p[i].pentaShape[4][0], p[i].pentaShape[4][1], p[i].pentaShape[0][0], p[i].pentaShape[0][1]))
+				{
+					p[i].alive = false;
+					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1], p[i].pentaShape[4][0], p[i].pentaShape[4][1]);
+					nt[NTcnt - 1].direction = 2;
+					NewTriangleCreate(p[i].pentaShape[0][0], p[i].pentaShape[0][1], p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
+					nt[NTcnt - 1].direction = 3;
+					NewTriangleCreate(p[i].pentaShape[1][0], p[i].pentaShape[1][1], p[i].pentaShape[2][0], p[i].pentaShape[2][1], p[i].pentaShape[3][0], p[i].pentaShape[3][1]);
+					nt[NTcnt - 1].direction = 2;
+				}
+			}
+		}
+
+		
+
 		lineShape[0][0] = -1.0;
 		lineShape[0][1] = -1.0;
 		lineShape[1][0] = -1.0;
@@ -583,7 +862,74 @@ GLvoid TimerFunction(int value)
 	switch (value)
 	{
 	case 1:
+		//도형 회전
 		polygonRotate += 1;
+		//새로운 삼각형 움직임
+		for (int i = 0; i < NTcnt; i++)
+		{
+			if (nt[i].alive)
+			{
+				if (nt[i].animation)
+				{
+					if (nt[i].direction == 2)
+					{
+						nt[i].triShape[0][0] -= 0.001;
+						nt[i].triShape[0][1] -= 0.008;
+						nt[i].triShape[1][0] -= 0.001;
+						nt[i].triShape[1][1] -= 0.008;
+						nt[i].triShape[2][0] -= 0.001;
+						nt[i].triShape[2][1] -= 0.008;
+						nt[i].cX -= 0.001;
+						nt[i].cY -= 0.008;
+
+						/*if (nt[i].speed + Allspeed > 0.001)
+						{
+							nt[i].cX = nt[i].cX + nt[i].speed + Allspeed;
+						}
+						else
+						{
+							nt[i].cX = nt[i].cX + 0.001;
+						}*/
+					}
+					if (nt[i].direction == 3)
+					{
+						nt[i].triShape[0][0] += 0.001;
+						nt[i].triShape[0][1] -= 0.008;
+						nt[i].triShape[1][0] += 0.001;
+						nt[i].triShape[1][1] -= 0.008;
+						nt[i].triShape[2][0] += 0.001;
+						nt[i].triShape[2][1] -= 0.008;
+						nt[i].cX += 0.001;
+						nt[i].cY -= 0.008;
+						/*if (nt[i].speed + Allspeed > 0.001)
+						{
+							nt[i].cX = nt[i].cX - nt[i].speed - Allspeed;
+						}
+						else
+						{
+							nt[i].cX = nt[i].cX - 0.001;
+						}*/
+					}
+					/*nt[i].cY = nt[i].cY - 0.001;
+
+					nt[i].triShape[0][0] = nt[i].cX - Size;
+					nt[i].triShape[0][1] = nt[i].cY - Size;
+					nt[i].triShape[1][0] = nt[i].cX + Size;
+					nt[i].triShape[1][1] = nt[i].cY - Size;
+					nt[i].triShape[2][0] = nt[i].cX;
+					nt[i].triShape[2][1] = nt[i].cY + Size;*/
+					if (nt[i].cY < -1.0)
+					{
+						nt[i].alive = false;
+					}
+				}
+				
+				if (nt[i].cX > box[0][0] && nt[i].cX < box[1][0] && nt[i].cY > box[0][1] && nt[i].cY < box[2][1])
+				{
+					nt[i].animation = false;
+				}
+			}
+		}
 
 		//포물선
 		//삼각형
@@ -613,7 +959,7 @@ GLvoid TimerFunction(int value)
 						t[i].cX = t[i].cX - 0.001;
 					}
 				}
-				t[i].cY = -t[i].m * (t[i].cX - 1.0) * (t[i].cX + 1.0);
+				t[i].cY = -t[i].m * (t[i].cX - 1.0) * (t[i].cX + 1.0) + t[i].C;
 
 				t[i].triShape[0][0] = t[i].cX - Size;
 				t[i].triShape[0][1] = t[i].cY - Size;
@@ -660,7 +1006,7 @@ GLvoid TimerFunction(int value)
 						r[i].cX = r[i].cX - 0.001;
 					}
 				}
-				r[i].cY = -r[i].m * (r[i].cX - 1.0) * (r[i].cX + 1.0);
+				r[i].cY = -r[i].m * (r[i].cX - 1.0) * (r[i].cX + 1.0)+r[i].C;
 
 				r[i].rectShape[0][0] = r[i].cX - Size;
 				r[i].rectShape[0][1] = r[i].cY - Size;
@@ -708,7 +1054,7 @@ GLvoid TimerFunction(int value)
 						p[i].cX = p[i].cX - 0.001;
 					}
 				}
-				p[i].cY = -p[i].m * (p[i].cX - 1.0) * (p[i].cX + 1.0);
+				p[i].cY = -p[i].m * (p[i].cX - 1.0) * (p[i].cX + 1.0)+p[i].C;
 
 				p[i].pentaShape[0][0] = p[i].cX - Size;
 				p[i].pentaShape[0][1] = p[i].cY - Size;
@@ -739,6 +1085,16 @@ GLvoid TimerFunction(int value)
 			box[1][0] -= 0.005;
 			box[2][0] -= 0.005;
 			box[3][0] -= 0.005;
+			for (int i = 0; i < NTcnt; i++)
+			{
+				if (!nt[i].animation)
+				{
+					nt[i].triShape[0][0] -= 0.005;
+					nt[i].triShape[1][0] -= 0.005;
+					nt[i].triShape[2][0] -= 0.005;
+					nt[i].cX -= 0.005;
+				}
+			}
 		}
 		if (!boxDirection)
 		{
@@ -746,6 +1102,16 @@ GLvoid TimerFunction(int value)
 			box[1][0] += 0.005;
 			box[2][0] += 0.005;
 			box[3][0] += 0.005;
+			for (int i = 0; i < NTcnt; i++)
+			{
+				if (!nt[i].animation)
+				{
+					nt[i].triShape[0][0] += 0.005;
+					nt[i].triShape[1][0] += 0.005;
+					nt[i].triShape[2][0] += 0.005;
+					nt[i].cX += 0.005;
+				}
+			}
 		}
 		if (box[0][0] < -1.0)
 		{
@@ -754,6 +1120,16 @@ GLvoid TimerFunction(int value)
 			box[1][0] += 0.005;
 			box[2][0] += 0.005;
 			box[3][0] += 0.005;
+			for (int i = 0; i < NTcnt; i++)
+			{
+				if (!nt[i].animation)
+				{
+					nt[i].triShape[0][0] += 0.005;
+					nt[i].triShape[1][0] += 0.005;
+					nt[i].triShape[2][0] += 0.005;
+					nt[i].cX += 0.005;
+				}
+			}
 		}
 		if (box[1][0] > 1.0)
 		{
@@ -762,6 +1138,16 @@ GLvoid TimerFunction(int value)
 			box[1][0] -= 0.005;
 			box[2][0] -= 0.005;
 			box[3][0] -= 0.005;
+			for (int i = 0; i < NTcnt; i++)
+			{
+				if (!nt[i].animation)
+				{
+					nt[i].triShape[0][0] -= 0.005;
+					nt[i].triShape[1][0] -= 0.005;
+					nt[i].triShape[2][0] -= 0.005;
+					nt[i].cX -= 0.005;
+				}
+			}
 		}
 		glutTimerFunc(10, TimerFunction, 1);
 		break;
@@ -781,7 +1167,6 @@ GLvoid TimerFunction(int value)
 		switch (createPolygon)
 		{
 		case 0:
-		
 			centerY = randomY(gen);
 			t[Tcnt].triShape[0][0] = centerX - Size;
 			t[Tcnt].triShape[0][1] = centerY - Size;
@@ -791,17 +1176,26 @@ GLvoid TimerFunction(int value)
 			t[Tcnt].triShape[2][1] = centerY + Size;
 			t[Tcnt].cX = centerX;
 			t[Tcnt].cY = centerY;
+			t[Tcnt].C = centerY;
 			t[Tcnt].alive = true;
 
 			t[Tcnt].direction = createPolygonDirection;
 			t[Tcnt].m = randomM(gen);
 			t[Tcnt].speed = randomSpeed(gen);
+			t[Tcnt].colors[0].x = colorDis(gen);
+			t[Tcnt].colors[0].y = colorDis(gen);
+			t[Tcnt].colors[0].z = colorDis(gen);
+			t[Tcnt].colors[1].x = colorDis(gen);
+			t[Tcnt].colors[1].y = colorDis(gen);
+			t[Tcnt].colors[1].z = colorDis(gen);
+			t[Tcnt].colors[2].x = colorDis(gen);
+			t[Tcnt].colors[2].y = colorDis(gen);
+			t[Tcnt].colors[2].z = colorDis(gen);
 
 			Tcnt++;
 			break;
 
 		case 1:
-			
 			centerY = randomY(gen);
 			r[Rcnt].rectShape[0][0] = centerX - Size;
 			r[Rcnt].rectShape[0][1] = centerY - Size;
@@ -813,11 +1207,24 @@ GLvoid TimerFunction(int value)
 			r[Rcnt].rectShape[3][1] = centerY + Size;
 			r[Rcnt].cX = centerX;
 			r[Rcnt].cY = centerY;
+			r[Rcnt].C = centerY;
 			r[Rcnt].alive = true;
 
 			r[Rcnt].direction = createPolygonDirection;
 			r[Rcnt].m = randomM(gen);
 			r[Rcnt].speed = randomSpeed(gen);
+			r[Rcnt].colors[0].x = colorDis(gen);
+			r[Rcnt].colors[0].y = colorDis(gen);
+			r[Rcnt].colors[0].z = colorDis(gen);
+			r[Rcnt].colors[1].x = colorDis(gen);
+			r[Rcnt].colors[1].y = colorDis(gen);
+			r[Rcnt].colors[1].z = colorDis(gen);
+			r[Rcnt].colors[2].x = colorDis(gen);
+			r[Rcnt].colors[2].y = colorDis(gen);
+			r[Rcnt].colors[2].z = colorDis(gen);
+			r[Rcnt].colors[3].x = colorDis(gen);
+			r[Rcnt].colors[3].y = colorDis(gen);
+			r[Rcnt].colors[3].z = colorDis(gen);
 
 			Rcnt++;
 			break;
@@ -835,11 +1242,27 @@ GLvoid TimerFunction(int value)
 			p[Pcnt].pentaShape[4][1] = centerY + Size / 2;
 			p[Pcnt].cX = centerX;
 			p[Pcnt].cY = centerY;
+			p[Pcnt].C = centerY;
 			p[Pcnt].alive = true;
 
 			p[Pcnt].direction = createPolygonDirection;
 			p[Pcnt].m = randomM(gen);
 			p[Pcnt].speed = randomSpeed(gen);
+			p[Pcnt].colors[0].x = colorDis(gen);
+			p[Pcnt].colors[0].y = colorDis(gen);
+			p[Pcnt].colors[0].z = colorDis(gen);
+			p[Pcnt].colors[1].x = colorDis(gen);
+			p[Pcnt].colors[1].y = colorDis(gen);
+			p[Pcnt].colors[1].z = colorDis(gen);
+			p[Pcnt].colors[2].x = colorDis(gen);
+			p[Pcnt].colors[2].y = colorDis(gen);
+			p[Pcnt].colors[2].z = colorDis(gen);
+			p[Pcnt].colors[3].x = colorDis(gen);
+			p[Pcnt].colors[3].y = colorDis(gen);
+			p[Pcnt].colors[3].z = colorDis(gen);
+			p[Pcnt].colors[4].x = colorDis(gen);
+			p[Pcnt].colors[4].y = colorDis(gen);
+			p[Pcnt].colors[4].z = colorDis(gen);
 
 			Pcnt++;
 			break;
@@ -877,25 +1300,24 @@ GLvoid TimerFunction(int value)
 				}
 			}
 		}
-		
 		glutTimerFunc(100, TimerFunction, 3);
 		break;
 	}
 	glutPostRedisplay();
 }
 
-Point CrossDot(Point a, Point b, Point c, Point d)
+int checkCollision(GLfloat X1, GLfloat Y1, GLfloat X2, GLfloat Y2)
 {
 	// 두 선분의 좌표를 변수에 저장
-	double x1 = c.x;
-	double x2 = d.x;
-	double x3 = a.x;
-	double x4 = b.x;
+	double x1 = lineShape[0][0];
+	double x2 = lineShape[1][0];
+	double x3 = X1;
+	double x4 = X2;
 
-	double y1 = c.y;
-	double y2 = d.y;
-	double y3 = a.y;
-	double y4 = b.y;
+	double y1 = lineShape[0][1];
+	double y2 = lineShape[1][1];
+	double y3 = Y1;
+	double y4 = Y2;
 
 	// 두 선분의 방정식 계수
 	double a1 = y2 - y1;
@@ -906,25 +1328,56 @@ Point CrossDot(Point a, Point b, Point c, Point d)
 	double b2 = x3 - x4;
 	double c2 = x4 * y3 - x3 * y4;
 
-	Point intersection;
-	Point xx;
-	xx.x = -1.0;
-	xx.y = -1.0;
-
 	// 두 직선이 만나는 점의 좌표
-	intersection.x = (b1 * c2 - b2 * c1) / (a1 * b2 - a2 * b1);
-	intersection.y = (a2 * c1 - a1 * c2) / (a1 * b2 - a2 * b1);
+	double intersectionX = (b1 * c2 - b2 * c1) / (a1 * b2 - a2 * b1);
+	double intersectionY = (a2 * c1 - a1 * c2) / (a1 * b2 - a2 * b1);
 
 	// 점이 두 선분 사이에 있는지 확인
 	if (
-		(intersection.x >= fmin(x1, x2) && intersection.x <= fmax(x1, x2)) &&
-		(intersection.y >= fmin(y1, y2) && intersection.y <= fmax(y1, y2)) &&
-		(intersection.x >= fmin(x3, x4) && intersection.x <= fmax(x3, x4)) &&
-		(intersection.y >= fmin(y3, y4) && intersection.y <= fmax(y3, y4))
+		(intersectionX >= fmin(x1, x2) && intersectionX <= fmax(x1, x2)) &&
+		(intersectionY >= fmin(y1, y2) && intersectionY <= fmax(y1, y2)) &&
+		(intersectionX >= fmin(x3, x4) && intersectionX <= fmax(x3, x4)) &&
+		(intersectionY >= fmin(y3, y4) && intersectionY <= fmax(y3, y4))
 		) {
-		return intersection; // 두 선분이 교차함
+		return 1; // 두 선분이 교차함
 	}
 	else {
-		return xx; // 두 선분이 교차하지 않음
+		return 0; // 두 선분이 교차하지 않음
 	}
+}
+
+void NewTriangleCreate(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, GLfloat x3, GLfloat y3)
+{
+	//centerY = randomY(gen);
+	nt[NTcnt].triShape[0][0] = x1;
+	nt[NTcnt].triShape[0][1] = y1;
+	nt[NTcnt].triShape[1][0] = x2;
+	nt[NTcnt].triShape[1][1] = y2;
+	nt[NTcnt].triShape[2][0] = x3;
+	nt[NTcnt].triShape[2][1] = y3;
+	nt[NTcnt].cX = (x1+x2+x3)/3;
+	nt[NTcnt].cY = (y1+y2+y3)/3;
+
+	//nt[NTcnt].C = centerY;
+	nt[NTcnt].alive = true;
+	 
+	//nt[NTcnt].direction = createPolygonDirection;
+	//nt[NTcnt].m = randomM(gen);
+
+	//방향은 따로 추가
+
+	//nt[NTcnt].speed = randomSpeed(gen);
+	nt[NTcnt].speed = 0.007;
+
+	nt[NTcnt].colors[0].x = 0.5;
+	nt[NTcnt].colors[1].x = 0.5;
+	nt[NTcnt].colors[2].x = 0.5;
+	nt[NTcnt].colors[0].y = 0.5;
+	nt[NTcnt].colors[1].y = 0.5;
+	nt[NTcnt].colors[2].y = 0.5;
+	nt[NTcnt].colors[0].z = 0.5;
+	nt[NTcnt].colors[1].z = 0.5;
+	nt[NTcnt].colors[2].z = 0.5;
+
+	NTcnt++;
 }
