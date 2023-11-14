@@ -119,6 +119,83 @@ GLfloat rectColors6[4][3] = { //--- 삼각형 꼭지점 색상
 	{ 0.7,0.7,0.7 }
 };
 
+glm::vec3 cube1[12][3]{
+	// 앞면
+	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5} },
+	{ {0.5, 0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, -0.5, -0.5} },
+
+	// 뒷면
+	{ {-0.5, -0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5} },
+
+	// 상단면
+	{ {-0.5, 0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, 0.5, -0.5} },
+
+	// 하단면
+	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, -0.5, 0.5} },
+	{ {0.5, -0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
+
+	// 왼쪽면
+	{ {-0.5, -0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, 0.5, 0.5} },
+	{ {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
+
+	// 오른쪽면
+	{ {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, -0.5, -0.5} },
+};
+glm::vec3 cube2[12][3]{
+	// 앞면
+	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5} },
+	{ {0.5, 0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, -0.5, -0.5} },
+
+	// 뒷면
+	{ {-0.5, -0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5} },
+
+	// 상단면
+	{ {-0.5, 0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, 0.5, -0.5} },
+
+	// 하단면
+	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, -0.5, 0.5} },
+	{ {0.5, -0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
+
+	// 왼쪽면
+	{ {-0.5, -0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, 0.5, 0.5} },
+	{ {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
+
+	// 오른쪽면
+	{ {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, -0.5, -0.5} },
+};
+glm::vec3 cube3[12][3]{
+	// 앞면
+	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5} },
+	{ {0.5, 0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, -0.5, -0.5} },
+
+	// 뒷면
+	{ {-0.5, -0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5} },
+
+	// 상단면
+	{ {-0.5, 0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, 0.5, -0.5} },
+
+	// 하단면
+	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, -0.5, 0.5} },
+	{ {0.5, -0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
+
+	// 왼쪽면
+	{ {-0.5, -0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, 0.5, 0.5} },
+	{ {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
+
+	// 오른쪽면
+	{ {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
+	{ {0.5, 0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, -0.5, -0.5} },
+};
+
+
 
 GLfloat triShape[10][3][3] = {};//--- 삼각형 위치 값
 
@@ -209,7 +286,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	//glEnable(GL_CULL_FACE); //--- 상태 설정은 필요한 곳에서 하면 된다.
 	//glDisable(GL_DEPTH_TEST | GL_CULL_FACE);	//해제
 
-	glutTimerFunc(1000, TimerFunction, 1);
+	glutTimerFunc(10, TimerFunction, 1);
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
@@ -248,7 +325,6 @@ GLvoid drawScene()
 	glUniformMatrix4fv(projLocation, 1, GL_FALSE, &pTransform[0][0]);
 
 	//뷰 변환
-
 	view = glm::lookAt(cameraPos, cameraDirection, cameraUp);
 	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
 
@@ -314,8 +390,8 @@ GLvoid drawScene()
 
 	//면 그리기
 	model = glm::mat4(1.0f);
-	model = glm::rotate(model, glm::radians(angleX), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(angleY), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
+	//model = glm::rotate(model, glm::radians(angleY), glm::vec3(0.0f, 0.0f, 1.0f));
 	for (int i = 0; i < 4; i++)
 	{
 		// 색상 바꾸기
@@ -400,28 +476,6 @@ GLvoid drawScene()
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glDrawArrays(GL_QUADS, 0, 4);
 	}
-	//for (int i = 0; i < 4; i++)
-	//{
-	//	// 색상 바꾸기
-	//	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	//	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), rectColors5[i], GL_STATIC_DRAW);
-	//	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	//	glEnableVertexAttribArray(1);
-	//
-	//	// modelTransform 변수에 변환 값 적용하기
-	//	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
-	//
-	//	// 사각형 그리기
-	//	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	//	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), rectShape5, GL_STATIC_DRAW);
-	//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	//	glEnableVertexAttribArray(0);
-	//
-	//	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	//	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	//	glDrawArrays(GL_QUADS, 0, 4);
-	//}
-
 	for (int i = 0; i < 4; i++)
 	{
 		// 색상 바꾸기
@@ -444,24 +498,19 @@ GLvoid drawScene()
 		glDrawArrays(GL_QUADS, 0, 4);
 	}
 
+	//상자 1--------------------------------------------------------------------------------------
 	//s r t p 코드 작성시에는 반대 방향으로.
 	model = glm::mat4(1.0f);
-
-	// x축으로 30도 회전
-	model = glm::rotate(model, glm::radians(-30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	// y축으로 30도 회전
-	model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	// z축으로 0도 회전
-	model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-	//회전
-	model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-
 	//이동
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.8f));
+	//이동
+	model = glm::translate(model, glm::vec3(0.0f, -angleX / 100, 0.0f));
+	//이동
+	model = glm::translate(model, glm::vec3(-angleX / 100, 0.0f, 0.0f));
+	//회전
+	model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
 	//축소
-	model = glm::scale(model, glm::vec3(1, 1, 1));
+	model = glm::scale(model, glm::vec3(0.3, 0.3, 0.3));
 
 	//정육면체
 	for (int i = 0; i < 12; i++) {
@@ -474,22 +523,82 @@ GLvoid drawScene()
 		glEnableVertexAttribArray(1);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &cube[i][0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &cube1[i][0], GL_STATIC_DRAW);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(0);
 
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
+	//상자2--------------------------------------------------------------------------------------
+	//s r t p 코드 작성시에는 반대 방향으로.
+	model = glm::mat4(1.0f);
+	//이동
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.5f));
+	//회전
+	model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
+	//축소
+	model = glm::scale(model, glm::vec3(0.2, 0.2, 0.2));
 
-	//구
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+	//정육면체
+	for (int i = 0; i < 12; i++) {
+		// modelTransform 변수에 변환 값 적용하기
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 
-	qobj = gluNewQuadric(); // 객체 생성하기
-	gluQuadricDrawStyle(qobj, GLU_LINE); // 도형 스타일
-	gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
-	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
-	gluSphere(qobj, 1.0, 20, 20); // 객체 만들기
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &colors[i][0], GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &cube2[i][0], GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}
+	//상자 3--------------------------------------------------------------------------------------
+	//s r t p 코드 작성시에는 반대 방향으로.
+	model = glm::mat4(1.0f);
+	//이동
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.2f));
+	//회전
+	model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
+	//축소
+	model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
+
+	//정육면체
+	for (int i = 0; i < 12; i++) {
+		// modelTransform 변수에 변환 값 적용하기
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &colors[i][0], GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &cube3[i][0], GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}
+	//--------------------------------------------------------------------------------------------
+
+	////구
+	//model = glm::mat4(1.0f);
+	////축소
+	//model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
+	//glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+	//qobj = gluNewQuadric(); // 객체 생성하기
+	//gluQuadricDrawStyle(qobj, GLU_FILL); // 도형 스타일
+	//gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
+	//gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
+	//gluSphere(qobj, 1.0, 20, 20); // 객체 만들기
 
 	glutSwapBuffers(); //--- 화면에 출력하기
 }
@@ -585,6 +694,19 @@ char* filetobuf(const char* file)
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
+	case '1':
+		cameraDirection.x += 0.1;
+		break;
+	case '2':
+		cameraDirection.x -= 0.1;
+		break;
+	case '3':
+		cameraDirection.y += 0.1;
+		break;
+	case '4':
+		cameraDirection.y -= 0.1;
+		break;
+
 	case '-':
 		cameraPos.z += 0.1;
 		break;
@@ -644,10 +766,9 @@ GLvoid Mouse(int button, int state, int x, int y)
 }
 
 
-
 GLvoid Motion(int x, int y)
 {
-	float sensitivity = 0.2f;
+	float sensitivity = 100.0f;
 	if (movingMouse >= 0)
 	{
 		WindowToOpenGL(x, y, openGLX, openGLY);
@@ -681,5 +802,5 @@ GLvoid TimerFunction(int value)
 		break;
 	}
 	glutPostRedisplay();
-	glutTimerFunc(1000, TimerFunction, 1);
+	glutTimerFunc(10, TimerFunction, 1);
 }
