@@ -252,6 +252,30 @@ bool start = true;
 float angleX = 0.0f;
 float angleY = 0.0f;
 
+int ZSelection = 0;
+int ZSelectionCnt = 0;
+float Zcnt = 0.0;
+
+float gravity = 0.0;
+float movingX = 0.0;
+float movingX2 = 0.0;
+float movingX3 = 0.0;
+float movingX4 = 0.0;
+float movingX5 = 0.0;
+float movingY = 0.0;
+float movingY2 = 0.0;
+float movingY3 = 0.0;
+float movingY4 = 0.0;
+float movingY5 = 0.0;
+
+float moving9X[5];
+float moving9Y[5];
+int create9 = 0;
+int direction9[5]{};
+
+bool bottomDelete = false;
+float bottomDown = 0.0;
+
 void make_shaderProgram();
 void make_vertexShaders();
 void make_fragmentShaders();
@@ -360,7 +384,8 @@ GLvoid drawScene()
 			//cz = color(gen);
 			colors[i][2].z = cz;
 		}
-
+		printf("zZ : Z축기준으로 돌기\n");
+		printf("aA : Z축으로 위아래 움직이기\n");
 		start = false;
 	}
 
@@ -391,7 +416,9 @@ GLvoid drawScene()
 	//면 그리기
 	model = glm::mat4(1.0f);
 	model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(Zcnt), glm::vec3(0.0f, 0.0f, 1.0f));
 	//model = glm::rotate(model, glm::radians(angleY), glm::vec3(0.0f, 0.0f, 1.0f));
+	
 	for (int i = 0; i < 4; i++)
 	{
 		// 색상 바꾸기
@@ -476,39 +503,53 @@ GLvoid drawScene()
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glDrawArrays(GL_QUADS, 0, 4);
 	}
-	for (int i = 0; i < 4; i++)
+	if (!bottomDelete)
 	{
-		// 색상 바꾸기
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-		glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), rectColors6[i], GL_STATIC_DRAW);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(1);
+		for (int i = 0; i < 4; i++)
+		{
+			// 색상 바꾸기
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+			glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), rectColors6[i], GL_STATIC_DRAW);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(1);
 
-		// modelTransform 변수에 변환 값 적용하기
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			// modelTransform 변수에 변환 값 적용하기
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 
-		// 사각형 그리기
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-		glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), rectShape6, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(0);
+			// 사각형 그리기
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+			glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), rectShape6, GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(0);
 
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDrawArrays(GL_QUADS, 0, 4);
+			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glDrawArrays(GL_QUADS, 0, 4);
+		}
 	}
 
 	//상자 1--------------------------------------------------------------------------------------
 	//s r t p 코드 작성시에는 반대 방향으로.
 	model = glm::mat4(1.0f);
 	//이동
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.8f));
+	model = glm::translate(model, glm::vec3(0.0f, -0.82f, 0.3f));
+
 	//이동
-	model = glm::translate(model, glm::vec3(0.0f, -angleX / 100, 0.0f));
-	//이동
-	model = glm::translate(model, glm::vec3(-angleX / 100, 0.0f, 0.0f));
+	//model = glm::translate(model, glm::vec3(0.0f, -angleX / 100, 0.0f));
+	//바닥열리기
+	if (bottomDelete)
+	{
+		model = glm::translate(model, glm::vec3(0.0f, bottomDown, 0.0f));
+	}
+	//중력
+	model = glm::translate(model, glm::vec3(0.0f, gravity, 0.0f));
+	
 	//회전
 	model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(Zcnt), glm::vec3(0.0f, 0.0f, 1.0f));
+
+	model = glm::translate(model, glm::vec3(movingX, movingY, 0.0f));
+
 	//축소
 	model = glm::scale(model, glm::vec3(0.3, 0.3, 0.3));
 
@@ -534,9 +575,17 @@ GLvoid drawScene()
 	//s r t p 코드 작성시에는 반대 방향으로.
 	model = glm::mat4(1.0f);
 	//이동
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.5f));
+	model = glm::translate(model, glm::vec3(0.0f, -0.87f, 0.6f));
+	//바닥열리기
+	if (bottomDelete)
+	{
+		model = glm::translate(model, glm::vec3(0.0f, bottomDown, 0.0f));
+	}
+	
 	//회전
 	model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(Zcnt), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::translate(model, glm::vec3(movingX2, movingY2, 0.0f));
 	//축소
 	model = glm::scale(model, glm::vec3(0.2, 0.2, 0.2));
 
@@ -562,9 +611,18 @@ GLvoid drawScene()
 	//s r t p 코드 작성시에는 반대 방향으로.
 	model = glm::mat4(1.0f);
 	//이동
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.2f));
+	model = glm::translate(model, glm::vec3(0.0f, -0.95f, 0.75f));
+	//바닥열리기
+	if (bottomDelete)
+	{
+		model = glm::translate(model, glm::vec3(0.0f, bottomDown, 0.0f));
+	}
+	
 	//회전
 	model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(Zcnt), glm::vec3(0.0f, 0.0f, 1.0f));
+
+	model = glm::translate(model, glm::vec3(movingX3, movingY3, 0.0f));
 	//축소
 	model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
 
@@ -587,18 +645,119 @@ GLvoid drawScene()
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 	//--------------------------------------------------------------------------------------------
+	//구1
+	if (create9 > 0)
+	{
+		model = glm::mat4(1.0f);
+		//바닥열리기
+		if (bottomDelete)
+		{
+			model = glm::translate(model, glm::vec3(0.0f, bottomDown, 0.0f));
+		}
+		model = glm::translate(model, glm::vec3(moving9X[0], moving9Y[0], 0.2f));
+		model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
+		model = glm::rotate(model, glm::radians(Zcnt), glm::vec3(0.0f, 0.0f, 1.0f));
+		//축소
+		model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 
-	////구
-	//model = glm::mat4(1.0f);
-	////축소
-	//model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
-	//glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+		qobj = gluNewQuadric(); // 객체 생성하기
+		gluQuadricDrawStyle(qobj, GLU_FILL); // 도형 스타일
+		gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
+		gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
+		gluSphere(qobj, 1.0, 20, 20); // 객체 만들기
+	}
+	if (create9 > 1)
+	{
+		//구2
+		model = glm::mat4(1.0f);
+		//바닥열리기
+		if (bottomDelete)
+		{
+			model = glm::translate(model, glm::vec3(0.0f, bottomDown, 0.0f));
+		}
+		model = glm::translate(model, glm::vec3(moving9X[1], moving9Y[1], 0.2f));
+		model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
+		model = glm::rotate(model, glm::radians(Zcnt), glm::vec3(0.0f, 0.0f, 1.0f));
+		//축소
+		model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 
-	//qobj = gluNewQuadric(); // 객체 생성하기
-	//gluQuadricDrawStyle(qobj, GLU_FILL); // 도형 스타일
-	//gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
-	//gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
-	//gluSphere(qobj, 1.0, 20, 20); // 객체 만들기
+		qobj = gluNewQuadric(); // 객체 생성하기
+		gluQuadricDrawStyle(qobj, GLU_FILL); // 도형 스타일
+		gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
+		gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
+		gluSphere(qobj, 1.0, 20, 20); // 객체 만들기
+	}
+	if (create9 > 2)
+	{
+		//구3
+		//바닥열리기
+		model = glm::mat4(1.0f);
+		if (bottomDelete)
+		{
+			model = glm::translate(model, glm::vec3(0.0f, bottomDown, 0.0f));
+		}
+		model = glm::translate(model, glm::vec3(moving9X[2], moving9Y[2], 0.2f));
+		model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
+		model = glm::rotate(model, glm::radians(Zcnt), glm::vec3(0.0f, 0.0f, 1.0f));
+		//축소
+		model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+		qobj = gluNewQuadric(); // 객체 생성하기
+		gluQuadricDrawStyle(qobj, GLU_FILL); // 도형 스타일
+		gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
+		gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
+		gluSphere(qobj, 1.0, 20, 20); // 객체 만들기
+	}
+	
+	if (create9 > 3)
+	{
+		//구4
+		model = glm::mat4(1.0f);
+		//바닥열리기
+		if (bottomDelete)
+		{
+			model = glm::translate(model, glm::vec3(0.0f, bottomDown, 0.0f));
+		}
+		model = glm::translate(model, glm::vec3(moving9X[3], moving9Y[3], 0.2f));
+		model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
+		model = glm::rotate(model, glm::radians(Zcnt), glm::vec3(0.0f, 0.0f, 1.0f));
+		//축소
+		model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+		qobj = gluNewQuadric(); // 객체 생성하기
+		gluQuadricDrawStyle(qobj, GLU_FILL); // 도형 스타일
+		gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
+		gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
+		gluSphere(qobj, 1.0, 20, 20); // 객체 만들기
+	}
+	
+	if (create9 > 4)
+	{
+		//구5
+		model = glm::mat4(1.0f);
+		//바닥열리기
+		if (bottomDelete)
+		{
+			model = glm::translate(model, glm::vec3(0.0f, bottomDown, 0.0f));
+		}
+		model = glm::translate(model, glm::vec3(moving9X[4], moving9Y[4], 0.2f));
+		model = glm::rotate(model, glm::radians(-angleX), glm::vec3(0.0f, 0.0f, 1.0f));
+		model = glm::rotate(model, glm::radians(Zcnt), glm::vec3(0.0f, 0.0f, 1.0f));
+		//축소
+		model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+		qobj = gluNewQuadric(); // 객체 생성하기
+		gluQuadricDrawStyle(qobj, GLU_FILL); // 도형 스타일
+		gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
+		gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
+		gluSphere(qobj, 1.0, 20, 20); // 객체 만들기
+	}
+	
 
 	glutSwapBuffers(); //--- 화면에 출력하기
 }
@@ -691,6 +850,9 @@ char* filetobuf(const char* file)
 	return buf; // Return the buffer 
 }
 
+int ASelection = 0;
+int ASelectionCnt = 0;
+
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
@@ -706,12 +868,74 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case '4':
 		cameraDirection.y -= 0.1;
 		break;
-
+	case '5':
+		cameraDirection.z += 0.1;
+		break;
+	case '6':
+		cameraDirection.z -= 0.1;
+		break;
 	case '-':
 		cameraPos.z += 0.1;
 		break;
 	case '=':
 		cameraPos.z -= 0.1;
+		break;
+	case 'z':
+		if (ZSelectionCnt % 2 == 0)
+		{
+			ZSelection = 1;
+			ZSelectionCnt++;
+		}
+		else
+		{
+			ZSelection = 0;
+			ZSelectionCnt++;
+		}
+		break;
+	case 'Z':
+		if (ZSelectionCnt % 2 == 0)
+		{
+			ZSelection = 2;
+			ZSelectionCnt++;
+		}
+		else
+		{
+			ZSelection = 0;
+			ZSelectionCnt++;
+		}
+		break;
+	case 'a':
+		if (ASelectionCnt % 2 == 0)
+		{
+			ASelection = 1;
+			ASelectionCnt++;
+		}
+		else
+		{
+			ASelection = 0;
+			ASelectionCnt++;
+		}
+		break;
+	case 'A':
+		if (ASelectionCnt % 2 == 0)
+		{
+			ASelection = 2;
+			ASelectionCnt++;
+		}
+		else
+		{
+			ASelection = 0;
+			ASelectionCnt++;
+		}
+		break;
+	case 'b':
+		if (create9 < 5)
+		{
+			create9++;
+		}
+		break;
+	case 't':
+		bottomDelete = true;
 		break;
 	case 'q':
 		glutLeaveMainLoop();
@@ -765,7 +989,6 @@ GLvoid Mouse(int button, int state, int x, int y)
 	}
 }
 
-
 GLvoid Motion(int x, int y)
 {
 	float sensitivity = 100.0f;
@@ -799,6 +1022,91 @@ GLvoid TimerFunction(int value)
 	switch (value)
 	{
 	case 1:
+		if (angleX < -10 && angleX > -90)
+		{
+			if (movingX > -0.6)
+			{
+				movingX -= 0.005;
+			}
+			if (movingX2 > -0.645)
+			{
+				movingX2 -= 0.005;
+			}
+			if (movingX3 > -0.675)
+			{
+				movingX3 -= 0.005;
+			}
+		}
+		if (angleX > 10 && angleX < 90)
+		{
+			if (movingX < 0.6)
+			{
+				movingX += 0.005;
+			}
+			if (movingX2 < 0.645)
+			{
+				movingX2 += 0.005;
+			}
+			if (movingX3 < 0.675)
+			{
+				movingX3 += 0.005;
+			}
+		}
+
+		//구 이동
+		for (int i = 0; i < create9; i++)
+		{
+			if (direction9[i] == 0)
+			{
+				
+				if (!bottomDelete)
+				{
+					moving9X[i] += 0.01;
+					moving9Y[i] += 0.01;
+				}
+				if (moving9Y[i] > 1 || moving9Y[i] < -1 || moving9X[i]>1 || moving9X[i]<-1)
+				{
+					direction9[i] = 1;
+				}
+			}
+			if (direction9[i] == 1)
+			{
+				if (!bottomDelete)
+				{
+					moving9X[i] -= 0.01;
+					moving9Y[i] -= 0.01;
+				}
+				if (moving9Y[i] > 1 || moving9Y[i] < -1 || moving9X[i]>1 || moving9X[i] < -1)
+				{
+					direction9[i] = 0;
+				}
+			}
+		}
+
+		//바닥 열리기
+		if (bottomDelete)
+		{
+			bottomDown -= 0.01;
+		}
+
+		//z축 회전
+		if (ZSelection == 1)
+		{
+			Zcnt += 1;
+		}
+		else if (ZSelection == 2)
+		{
+			Zcnt -= 1;
+		}
+		//z축 앞 뒤로
+		if (ASelection == 1)
+		{
+			cameraPos.z += 0.05;
+		}
+		if (ASelection == 2)
+		{
+			cameraPos.z -= 0.05;
+		}
 		break;
 	}
 	glutPostRedisplay();
