@@ -349,6 +349,70 @@ struct CIRCLE :OBJECT
 };
 CIRCLE circle;
 
+struct SPHERE :OBJECT
+{
+	void Init()
+	{
+		for (int i = 0; i < vertex_count; i++)
+		{
+			double random_color = dis(gen);
+
+			colordata[i].x = dis(gen);
+			colordata[i].y = dis(gen);
+			colordata[i].z = dis(gen);
+		}
+		for (int i = 0; i < vertex_count; i++)
+		{
+			vertexdata[i] -= glm::vec3(0.5, 0.5, 0.5);
+		}
+
+		glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
+		glBindVertexArray(vao); //--- VAO를 바인드하기
+		glGenBuffers(3, vbo); //--- 3개의 VBO를 지정하고 할당하기
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), colordata, GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), normaldata, GL_STATIC_DRAW);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(2);
+	}
+
+	void draw(int shaderID)
+	{
+		unsigned int modelLocation = glGetUniformLocation(shaderID, "model");
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GetTransform() * GetmodelTransform()));
+		glBindVertexArray(vao);
+		glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+	}
+
+	void update(glm::vec3 color)
+	{
+		for (int i = 0; i < vertex_count; i++)
+		{
+			colordata[i] = color;
+		}
+
+		glBindVertexArray(vao);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), colordata, GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+	}
+};
+SPHERE Rsphere;
+SPHERE Gsphere;
+SPHERE Bsphere;
+
 GLfloat lineShape[10][2][3] = {};	//--- 선분 위치 값
 
 glm::vec3 colors[12][3] = {};
@@ -402,8 +466,10 @@ bool start = true;
 
 bool NSelection = true;	//true : cube, false : pyramid
 bool YSelection = false;
-bool RSelection = false;
-bool ZSelection = false;
+int RSelection = 0;
+int RSelectionCnt = 0;
+int CCnt = 0;
+float CX, CY, CZ;
 
 void make_shaderProgram();
 void make_vertexShaders();
@@ -444,6 +510,11 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	cube.ReadObj("cube.obj");
 	minicube.ReadObj("cube.obj");
 	pyramid.ReadObj("pyramid.obj");
+	Rsphere.ReadObj("sphere.obj");
+	Gsphere.ReadObj("sphere.obj");
+	Bsphere.ReadObj("sphere.obj");
+
+	CX = 1.0, CY = 1.0, CZ = 1.0;
 
 	//--- 세이더 읽어와서 세이더 프로그램 만들기
 	make_shaderProgram(); //--- 세이더 프로그램 만들기
@@ -484,8 +555,8 @@ GLvoid drawScene()
 
 	projection = glm::mat4(1.0f);
 	projection = glm::scale(projection, glm::vec3(wheel_scale, wheel_scale, wheel_scale));
-	projection = glm::rotate(projection, (float)glm::radians(x_angle + 30), glm::vec3(1.0, 0.0, 0.0));
-	projection = glm::rotate(projection, (float)glm::radians(y_angle - 30), glm::vec3(0.0, 1.0, 0.0));
+	projection = glm::rotate(projection, (float)glm::radians(x_angle), glm::vec3(1.0, 0.0, 0.0));
+	projection = glm::rotate(projection, (float)glm::radians(y_angle), glm::vec3(0.0, 1.0, 0.0));
 
 	unsigned int cameraLocation = glGetUniformLocation(shaderProgramID, "view");
 	glUniformMatrix4fv(cameraLocation, 1, GL_FALSE, glm::value_ptr(projection));
@@ -502,50 +573,16 @@ GLvoid drawScene()
 	unsigned int lightPosLocation = glGetUniformLocation(shaderProgramID, "lightPos"); //--- lightPos 값 전달: (0.0, 0.0, 5.0);
 	glUniform3f(lightPosLocation, lightposition.x, lightposition.y, lightposition.z);
 	unsigned int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor"); //--- lightColor 값 전달: (1.0, 1.0, 1.0) 백색
-	glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
+	glUniform3f(lightColorLocation, CX, CY, CZ);
 	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor"); //--- object Color값 전달: (1.0, 0.5, 0.3)의 색
 	glUniform3f(objColorLocation, 1.0, 0.5, 0.3);
 
-	if (start)
-	{
-		start = false;
-	}
+	Rsphere.draw(shaderProgramID);
+	Gsphere.draw(shaderProgramID);
+	Bsphere.draw(shaderProgramID);
 
-	model = glm::mat4(1.0f);
-
-	//축 그리기
-	for (int i = 0; i < 3; i++)
-	{
-		// 색상 바꾸기
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-		glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(GLfloat), XYZcolors[i * 2], GL_STATIC_DRAW);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(1);
-
-		// modelTransform 변수에 변환 값 적용하기
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-		glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(GLfloat), XYZShape[i], GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(0);
-
-		glLineWidth(2.0);
-		glDrawArrays(GL_LINES, 0, 2);
-	}
-
-	//s r t p 코드 작성시에는 반대 방향으로.
-	model = glm::mat4(1.0f);
-	if (NSelection)
-	{
-		cube.draw(shaderProgramID);
-	}
-	else
-	{
-		pyramid.draw(shaderProgramID);
-	}
 	minicube.draw(shaderProgramID);
-	circle.draw(shaderProgramID);
+	
 
 	glutSwapBuffers(); //--- 화면에 출력하기
 }
@@ -567,8 +604,24 @@ void InitBuffer()
 	pyramid.Init();
 	circle.Init();
 
-	minicube.worldmatrix.position.z = -3;
-	minicube.modelmatrix.scale = glm::vec3(0.5, 0.5, 0.5);
+	Rsphere.Init();
+	Gsphere.Init();
+	Bsphere.Init();
+
+	Rsphere.update({ 1.0, 0.0, 0.0 });
+	Gsphere.update({ 0.0, 1.0, 0.0 });
+	Bsphere.update({ 0.0, 0.0, 1.0 });
+
+	
+	Gsphere.worldmatrix.position.x = -2;
+	Bsphere.worldmatrix.position.x = -4;
+
+	Rsphere.modelmatrix.scale = glm::vec3(0.9, 0.9, 0.9);
+	Gsphere.modelmatrix.scale = glm::vec3(0.5, 0.5, 0.5);
+	Bsphere.modelmatrix.scale = glm::vec3(0.3, 0.3, 0.3);
+
+	minicube.worldmatrix.position.x = -3;
+	minicube.modelmatrix.scale = glm::vec3(0.2, 0.2, 0.2);
 }
 
 void make_shaderProgram()
@@ -650,6 +703,27 @@ char* filetobuf(const char* file)
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
+	case 'c':
+		switch (CCnt%3)
+		{
+		case 0:
+			CX = 1.0;
+			CY = 0.0;
+			CZ = 0.0;
+			break;
+		case 1:
+			CX = 0.0;
+			CY = 1.0;
+			CZ = 0.0;
+			break;
+		case 2:
+			CX = 0.0;
+			CY = 0.0;
+			CZ = 1.0;
+			break;
+		}
+		CCnt++;
+		break;
 	case 'z':
 		minicube.worldmatrix.position.z -= 0.1;
 		circle.r += 0.1;
@@ -661,7 +735,26 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		circle.update();
 		break;
 	case 'r':
-		RSelection = !RSelection;
+		if (RSelectionCnt % 2 == 0)
+		{
+			RSelection = 1;
+		}
+		else
+		{
+			RSelection = 0;
+		}
+		RSelectionCnt += 1;
+		break;
+	case 'R':
+		if (RSelectionCnt % 2 == 0)
+		{
+			RSelection = 2;
+		}
+		else
+		{
+			RSelection = 0;
+		}
+		RSelectionCnt += 1;
 		break;
 	case 'y':
 		YSelection = !YSelection;
@@ -765,10 +858,15 @@ GLvoid TimerFunction(int value)
 			pyramid.modelmatrix.rotation.y += 1;
 			//pyramid.update();
 		}
-		if (RSelection)
+		if (RSelection == 1)
 		{
 			cube.worldmatrix.rotation.y += 1;
 			cube.modelmatrix.rotation.y -= 1;
+		}
+		if (RSelection == 2)
+		{
+			cube.worldmatrix.rotation.y -= 1;
+			cube.modelmatrix.rotation.y += 1;
 		}
 		break;
 	}
