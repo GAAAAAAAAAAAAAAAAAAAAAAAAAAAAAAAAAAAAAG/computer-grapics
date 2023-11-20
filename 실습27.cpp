@@ -11,54 +11,346 @@
 #include <gl/glm/gtc/matrix_transform.hpp>
 #include <cmath>
 #include <random>
+#include <string>
 
 using namespace std;
 
 random_device rd;
 mt19937 gen(rd());
 uniform_real_distribution<double> XYdis(-1, 1);
-uniform_real_distribution<double> dis(0, 1);
+uniform_real_distribution<double> dis(0.0, 1.0);
 
-glm::vec3 cube[12][3]{
-	// 앞면
-	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5} },
-	{ {0.5, 0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, -0.5, -0.5} },
+struct Transform
+{
+	glm::vec3 position;
+	glm::vec3 rotation;
+	glm::vec3 scale = glm::vec3(1.0, 1.0, 1.0);
 
-	// 뒷면
-	{ {-0.5, -0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, 0.5, 0.5} },
-	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5} },
-
-	// 상단면
-	{ {-0.5, 0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
-	{ {0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {-0.5, 0.5, -0.5} },
-
-	// 하단면
-	{ {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, -0.5, 0.5} },
-	{ {0.5, -0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
-
-	// 왼쪽면
-	{ {-0.5, -0.5, -0.5}, {-0.5, 0.5, -0.5}, {-0.5, 0.5, 0.5} },
-	{ {-0.5, 0.5, 0.5}, {-0.5, -0.5, 0.5}, {-0.5, -0.5, -0.5} },
-
-	// 오른쪽면
-	{ {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5}, {0.5, 0.5, 0.5} },
-	{ {0.5, 0.5, 0.5}, {0.5, -0.5, 0.5}, {0.5, -0.5, -0.5} },
+	glm::mat4 GetTransform()
+	{
+		glm::mat4 T = glm::translate(glm::mat4(1.0f), position);
+		glm::mat4 S = glm::scale(glm::mat4(1.0), scale);
+		glm::mat4 RX = glm::rotate(glm::mat4(1.0f), (float)glm::radians(rotation.x), glm::vec3(1.0, 0.0, 0.0));
+		glm::mat4 RY = glm::rotate(glm::mat4(1.0f), (float)glm::radians(rotation.y), glm::vec3(0.0, 1.0, 0.0));
+		glm::mat4 RZ = glm::rotate(glm::mat4(1.0f), (float)glm::radians(rotation.z), glm::vec3(0.0, 0.0, 1.0));
+		return T * RX * RY * RZ * S;
+	}
 };
 
-GLfloat rectShape[4][3] = {
-	{-1,1,0},{-1,-1,0},{1,-1,0},{1,1,0}
-}; //--- 사각형 위치 값
+struct OBJECT {
+	GLuint vao, vbo[3];
+	Transform worldmatrix;
+	Transform modelmatrix;
+	OBJECT* parent{ nullptr };
+
+	glm::vec3* vertex;
+	glm::vec3* face;
+	glm::vec3* vertexdata;
+	glm::vec3* normaldata;
+	glm::vec3* colordata;
+
+	int v_count = 0;
+	int f_count = 0;
+	int vertex_count = f_count * 3;
+
+	void ReadObj(string fileName)
+	{
+		ifstream in{ fileName };
+
+		string s;
+
+		while (in >> s)
+		{
+			if (s == "v") v_count++;
+			else if (s == "f") f_count++;
+		}
+		in.close();
+		in.open(fileName);
+
+		vertex_count = f_count * 3;
+
+		vertex = new glm::vec3[v_count];
+		face = new glm::vec3[f_count];
+		vertexdata = new glm::vec3[vertex_count];
+		normaldata = new glm::vec3[vertex_count];
+		colordata = new glm::vec3[vertex_count];
+
+		int v_incount = 0;
+		int f_incount = 0;
+		while (in >> s)
+		{
+			if (s == "v") {
+				in >> vertex[v_incount].x >> vertex[v_incount].y >> vertex[v_incount].z;
+				v_incount++;
+			}
+			else if (s == "f") {
+				in >> face[f_incount].x >> face[f_incount].y >> face[f_incount].z;
+				vertexdata[f_incount * 3 + 0] = vertex[static_cast<int>(face[f_incount].x - 1)];
+				vertexdata[f_incount * 3 + 1] = vertex[static_cast<int>(face[f_incount].y - 1)];
+				vertexdata[f_incount * 3 + 2] = vertex[static_cast<int>(face[f_incount].z - 1)];
+				f_incount++;
+			}
+		}
+
+		for (int i = 0; i < f_count; i++)
+		{
+			glm::vec3 normal = glm::cross(vertexdata[i * 3 + 1] - vertexdata[i * 3 + 0], vertexdata[i * 3 + 2] - vertexdata[i * 3 + 0]);
+			//glm::vec3 normal = glm::vec3(0.0, 1.0, 0.0);
+			normaldata[i * 3 + 0] = normal;
+			normaldata[i * 3 + 1] = normal;
+			normaldata[i * 3 + 2] = normal;
+		}
+	}
+
+	//void Init()
+	//{
+	//	for (int i = 0; i < vertex_count; i++)
+	//	{
+	//		double random_color = dis(gen);
+	//
+	//		colordata[i].x = random_color;
+	//		colordata[i].y = random_color;
+	//		colordata[i].z = random_color;
+	//	}
+	//
+	//	glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
+	//	glBindVertexArray(vao); //--- VAO를 바인드하기
+	//	glGenBuffers(3, vbo); //--- 3개의 VBO를 지정하고 할당하기
+	//
+	//	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	//	glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
+	//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	//	glEnableVertexAttribArray(0);
+	//
+	//	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	//	glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), colordata, GL_STATIC_DRAW);
+	//	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	//	glEnableVertexAttribArray(1);
+	//
+	//	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+	//	glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), normaldata, GL_STATIC_DRAW);
+	//	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	//	glEnableVertexAttribArray(2);
+	//}
+
+	/*void draw()
+	{
+
+	}*/
+
+	glm::mat4 GetTransform()
+	{
+		if (parent)
+			return parent->GetTransform() * worldmatrix.GetTransform();
+		return worldmatrix.GetTransform();
+	}
+
+	glm::mat4 GetmodelTransform()
+	{
+		return modelmatrix.GetTransform();
+	}
+};
+
+struct CUBE :OBJECT
+{
+	void Init()
+	{
+		for (int i = 0; i < vertex_count; i++)
+		{
+			double random_color = dis(gen);
+
+			colordata[i].x = dis(gen);
+			colordata[i].y = dis(gen);
+			colordata[i].z = dis(gen);
+		}
+		for (int i = 0; i < vertex_count; i++)
+		{
+			vertexdata[i] -= glm::vec3(0.5, 0.5, 0.5);
+		}
+
+		glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
+		glBindVertexArray(vao); //--- VAO를 바인드하기
+		glGenBuffers(3, vbo); //--- 3개의 VBO를 지정하고 할당하기
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), colordata, GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), normaldata, GL_STATIC_DRAW);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(2);
+	}
+
+	void draw(int shaderID)
+	{
+		unsigned int modelLocation = glGetUniformLocation(shaderID, "model");
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GetTransform() * GetmodelTransform()));
+		glBindVertexArray(vao);
+		glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+	}
+
+	void update()
+	{
+		glBindVertexArray(vao);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+	}
+};
+CUBE cube;
+CUBE plain;
+CUBE minicube;
+
+struct PYRAMID :OBJECT
+{
+	void Init()
+	{
+		for (int i = 0; i < vertex_count; i++)
+		{
+			double random_color = dis(gen);
+
+			colordata[i].x = dis(gen);
+			colordata[i].y = dis(gen);
+			colordata[i].z = dis(gen);
+		}
+		for (int i = 0; i < vertex_count; i++)
+		{
+			vertexdata[i] -= glm::vec3(0.5, 0.5, 0.5);
+		}
+
+		glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
+		glBindVertexArray(vao); //--- VAO를 바인드하기
+		glGenBuffers(3, vbo); //--- 3개의 VBO를 지정하고 할당하기
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), colordata, GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), normaldata, GL_STATIC_DRAW);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(2);
+	}
+
+	void draw(int shaderID)
+	{
+		unsigned int modelLocation = glGetUniformLocation(shaderID, "model");
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GetTransform() * GetmodelTransform()));
+		glBindVertexArray(vao);
+		glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+	}
+
+	void update()
+	{
+		glBindVertexArray(vao);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+	}
+};
+PYRAMID pyramid;
+
+struct CIRCLE :OBJECT
+{
+
+	float r = 3.0;
+
+	void Init()
+	{
+		vertex_count = 360;
+		float angle = 0;
+		float x, y, z;
+		vertexdata = new glm::vec3[vertex_count];
+		normaldata = new glm::vec3[vertex_count];
+		colordata = new glm::vec3[vertex_count];
+
+		for (int i = 0; i < vertex_count; ++i)
+		{
+			angle = (float)i / 360 * 2 * 3.1415926535;
+			x = cos(angle) * r;
+			y = 0;
+			z = sin(angle) * r;
+			vertexdata[i] = glm::vec3(x, y, z);
+		}
+
+		for (int i = 0; i < vertex_count; i++)
+		{
+			double random_color = dis(gen);
+
+			colordata[i].x = dis(gen);
+			colordata[i].y = dis(gen);
+			colordata[i].z = dis(gen);
+		}
+
+		glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
+		glBindVertexArray(vao); //--- VAO를 바인드하기
+		glGenBuffers(3, vbo); //--- 3개의 VBO를 지정하고 할당하기
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), colordata, GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), normaldata, GL_STATIC_DRAW);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(2);
+	}
+
+	void draw(int shaderID)
+	{
+		unsigned int modelLocation = glGetUniformLocation(shaderID, "model");
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GetTransform() * GetmodelTransform()));
+		glBindVertexArray(vao);
+		glDrawArrays(GL_LINE_LOOP, 0, vertex_count);
+	}
+
+	void update()
+	{
+		float angle = 0;
+		float x, y, z;
+
+		for (int i = 0; i < vertex_count; ++i)
+		{
+			angle = (float)i / 360 * 2 * 3.1415926535;
+			x = cos(angle) * r;
+			y = 0;
+			z = sin(angle) * r;
+			vertexdata[i] = glm::vec3(x, y, z);
+		}
+		glBindVertexArray(vao);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+	}
+};
+CIRCLE circle;
 
 GLfloat lineShape[10][2][3] = {};	//--- 선분 위치 값
-
-GLfloat dotShape[10][3] = {};	//--- 점 위치 값
-
-GLfloat rectColors[4][3] = { //--- 삼각형 꼭지점 색상
-	{ 1.0, 0.0, 0.0 },
-	{ 0.0, 1.0, 0.0 },
-	{ 0.0, 0.0, 1.0 },
-	{ 1.0, 1.0, 1.0 }
-};
 
 glm::vec3 colors[12][3] = {};
 
@@ -73,58 +365,56 @@ GLfloat XYZcolors[6][3] = { //--- 축 색상
 	{ 0.0, 0.0, 1.0 },	   	{ 0.0, 0.0, 1.0 }
 };
 
-glm::vec3 cameraPos = glm::vec3(0.0f, -0.5f, 0.5f); //--- 카메라 위치
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 4.0f); //--- 카메라 위치
 glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, 0.0f); //--- 카메라 바라보는 방향
-glm::vec3 cameraUp = glm::vec3(0.0f, 0.0f, 1.0f); //--- 카메라 위쪽 방향
-
-glm::vec3 D_P = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f); //--- 카메라 위쪽 방향
 
 glm::mat4 model = glm::mat4(1.0f);
 glm::mat4 view = glm::mat4(1.0f);
 glm::mat4 projection = glm::mat4(1.0f);
 
-glm::mat4 tmodel = glm::mat4(1.0f);
-
-GLuint vao, vbo[2];
+GLuint vao, vbo[3];
 GLuint TriPosVbo, TriColorVbo;
 
 GLchar* vertexSource, * fragmentSource; //--- 소스코드 저장 변수
 GLuint vertexShader, fragmentShader; //--- 세이더 객체
 GLuint shaderProgramID; //--- 셰이더 프로그램
 
-float B = 0;
-int BSelection = 0;
-
-float M = 0;
-int MSelection = 0;
-
-float E = 0;
-
-float F = 0;
-int FSelection = 0;
-
-float T = 0;
-int TSelection = 0;
-
-float Z = 0;
-
-float Y = 0;
-int YSelection = 0;
-
-float R = 0;
-int RSelection = 0;
-
-float O = 0;
-int OSelection = 0;
-
 int windowWidth = 800;
-int windowHeight = 600;
+int windowHeight = 800;
 
 float openGLX, openGLY;
 int movingRectangle = -1;
 
+float ox = 0, oy = 0;
+float x_angle = 0;
+float y_angle = 0;
+float z_angle = 0;
+float pre_x_angle = 0;
+float pre_y_angle = 0;
+float wheel_scale = 0.15;
+bool left_button = 0;
+float fovy = 45;
+float near_1 = 0.1;
+float far_1 = 200.0;
+float persfect_z = -2.0;
+
 bool start = true;
 
+bool NSelection = true;	//true : cube, false : pyramid
+bool YSelection = false;
+int RSelection = 0;
+int RSelectionCnt = 0;
+bool ZSelection = false;
+bool MSelection = true;
+int GSelection = 0;
+int GSelectionCnt = 0;
+float Gcnt = 0;
+
+int CCnt = 0;
+float CX, CY, CZ;
+
+float cameraX, cameraY, cameraZ;
 
 void make_shaderProgram();
 void make_vertexShaders();
@@ -139,6 +429,8 @@ GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y);
 GLvoid Motion(int x, int y);
 GLvoid TimerFunction(int value);
 GLvoid SpecialKeys(int key, int x, int y);
+void ReadObj(FILE* path);
+GLvoid mouseWheel(int button, int dir, int x, int y);
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
@@ -151,7 +443,22 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 
 	//--- GLEW 초기화하기
 	glewExperimental = GL_TRUE;
-	glewInit();
+	if (glewInit() != GLEW_OK)
+	{
+		std::cerr << "Unable to initialize GLEW" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		std::cout << "GLEW Initialized\n";
+	}
+	cube.ReadObj("cube.obj");
+	minicube.ReadObj("cube.obj");
+	plain.ReadObj("cube.obj");
+	pyramid.ReadObj("pyramid.obj");
+
+	CX = 1.0, CY = 1.0, CZ = 1.0;
+	cameraX=0.0, cameraY=0.0, cameraZ=0.0;
 
 	//--- 세이더 읽어와서 세이더 프로그램 만들기
 	make_shaderProgram(); //--- 세이더 프로그램 만들기
@@ -160,21 +467,20 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	//glEnable(GL_CULL_FACE); //--- 상태 설정은 필요한 곳에서 하면 된다.
 	//glDisable(GL_DEPTH_TEST | GL_CULL_FACE);	//해제
 
-	glutTimerFunc(100, TimerFunction, 1);
+	glutTimerFunc(10, TimerFunction, 1);
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
 	glutSpecialFunc(SpecialKeys); // 방향키 콜백 함수 등록
 	glutMouseFunc(Mouse);
 	glutMotionFunc(Motion);
+	glutMouseWheelFunc(mouseWheel);
 
 	glutMainLoop();
 }
 
 GLvoid drawScene()
 {
-	GLUquadricObj* qobj;
-
 	glUseProgram(shaderProgramID);
 	glClearColor(0.0, 0.0, 0.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //--- 깊이 버퍼를 클리어한다.
@@ -191,82 +497,40 @@ GLvoid drawScene()
 	int viewLocation = glGetUniformLocation(shaderProgramID, "view"); //--- 버텍스 세이더에서 뷰잉 변환 행렬 변수값을 받아온다.
 	int projLocation = glGetUniformLocation(shaderProgramID, "projection"); //--- 버텍스 세이더에서 투영 변환 행렬 변수값을 받아온다.
 
-	//투영 변환
-	glm::mat4 pTransform = glm::mat4(1.0f);
-	projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f); //--- 투영 공간 설정: fovy, aspect, near, far
-	projection = glm::translate(projection, glm::vec3(0.0, 0.0, -2.0)); //--- 공간을 z축 이동
-	pTransform = glm::perspective(glm::radians(60.0f), (float)windowWidth / (float)windowHeight, 0.1f, 200.0f);
-	glUniformMatrix4fv(projLocation, 1, GL_FALSE, &pTransform[0][0]);
-	//카메라 위치만큼 뺀다음 다시 제자리로
-	//뷰 변환
-	if (YSelection == 1)
-	{
-		cameraDirection = glm::vec3(0.0f, 0.0f, 0.0f);
-	}
-	if (RSelection == 1)
-	{
-		cameraPos = glm::vec3(0.0f, -0.5f, 0.5f);
-	}
+	projection = glm::mat4(1.0f);
+	projection = glm::scale(projection, glm::vec3(wheel_scale, wheel_scale, wheel_scale));
+	projection = glm::rotate(projection, (float)glm::radians(x_angle+15), glm::vec3(1.0, 0.0, 0.0));
+	projection = glm::rotate(projection, (float)glm::radians(y_angle), glm::vec3(0.0, 1.0, 0.0));
+	projection = glm::rotate(projection, (float)glm::radians(z_angle), glm::vec3(0.0, 0.0, 1.0));
+	projection = glm::rotate(projection, (float)glm::radians(Gcnt), glm::vec3(0.0, 1.0, 0.0));
+	projection = glm::translate(projection, glm::vec3(cameraX, cameraY, cameraZ));
 
-	if (YSelection == 1)
-	{
-		cameraDirection -= cameraPos;
-		cameraDirection = glm::rotate(glm::mat4(1.0f), glm::radians(Y), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(cameraDirection, 1.0);
-		cameraDirection += cameraPos;
-	}
+	unsigned int cameraLocation = glGetUniformLocation(shaderProgramID, "view");
+	glUniformMatrix4fv(cameraLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
-	if (RSelection == 1)
-	{
-		cameraPos = glm::rotate(glm::mat4(1.0f), glm::radians(R), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(cameraPos, 1.0);
-	}
-	if (OSelection == 1)
-	{
-		cameraPos = glm::rotate(glm::mat4(1.0f), glm::radians(O), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(cameraPos, 1.0);
-		OSelection = 0;
-	}
+	glm::mat4 perspect = glm::mat4(1.0f);
+	perspect = glm::perspective(glm::radians(fovy), (float)windowWidth / (float)windowHeight, near_1, far_1);
+	perspect = glm::translate(perspect, glm::vec3(0.0, 0.0, persfect_z));
+	unsigned int projectionLocation = glGetUniformLocation(shaderProgramID, "projection");
+	glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(perspect));
 
+	glm::mat4 lightmatrix = minicube.GetTransform(); // 주어진 mat4 행렬
+	glm::vec3 lightposition = glm::vec3(lightmatrix[3]); // 행렬의 마지막 열을 사용하여 위치 추출
 
-	view = glm::lookAt(cameraPos, cameraDirection, cameraUp);
-	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
+	unsigned int lightPosLocation = glGetUniformLocation(shaderProgramID, "lightPos"); //--- lightPos 값 전달: (0.0, 0.0, 5.0);
+	glUniform3f(lightPosLocation, lightposition.x, lightposition.y, lightposition.z);
+	unsigned int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor"); //--- lightColor 값 전달: (1.0, 1.0, 1.0) 백색
+	glUniform3f(lightColorLocation, CX*(float)MSelection, CY * (float)MSelection, CZ * (float)MSelection);
+	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor"); //--- object Color값 전달: (1.0, 0.5, 0.3)의 색
+	glUniform3f(objColorLocation, 1.0, 0.5, 0.3);
 
 	if (start)
 	{
-		double m = 0.0;
-		double cx, cy, cz;
-		for (int i = 0; i < 12; i++)
-		{
-			cx = 0.3 + m;
-			cy = 0.0 + m;
-			cz = 0.3 + m;
-
-			m += 0.05;
-
-			colors[i][0].x = cx;
-			colors[i][1].x = cx;
-			colors[i][2].x = cx;
-
-			colors[i][0].y = cy;
-			colors[i][1].y = cy;
-			colors[i][2].y = cy;
-
-			colors[i][0].z = cz;
-			colors[i][1].z = cz;
-			colors[i][2].z = cz;
-		}
-		cout << "b/B: 크레인의 아래 몸체가 x축 방향으로 양/음 방향으로 이동한다. 다시 누르면 멈춘다." << endl;
-		cout << "m/M: 크레인의 중앙 몸체가 y축에 대하여 양/음 방향으로 회전한다. 다시 누르면 멈춘다" << endl;
-		cout << "f/F: 포신이 y축에 대하여 양/음 방향으로 회전하는데, 두 포신이 서로 반대방향으로 회전한다. 다시 누르면 멈춘다." << endl;
-		cout << "e/E: 2개 포신이 조금씩 이동해서 한 개가 된다/다시 제자리로 이동해서 2개가 된다." << endl;
-		cout << "t/T: 크레인의 맨 위 2개의 팔이 z축에 대하여 양/음 방향으로 서로 반대방향으로 회전한다. 다시 누르면 멈춘다." << endl;
-		cout << "x/X: 모든 움직임 멈추기" << endl;
-		cout << "c/C: 모든 움직임이 초기화된다." << endl;
-		cout << "Q: 프로그램 종료하기" << endl;
-		cout << "위아래 방향키: 카메라가 z축 양/음 방향으로 이동" << endl;
-		cout << "좌우 방향키: 카메라가 x축 양/음 방향으로 이동" << endl;
-		cout << "y/Y: 카메라 기준 y축에 대하여 회전" << endl;
-		cout << "o : 화면의 중심의 y축에 대하여 카메라가 회전 (중점에 대하여 공전)" << endl;
-		cout << "r: a 명령어와 같이 화면의 중심의 축에 대하여 카메라가 회전하는 애니메이션을 진행한다/멈춘다." << endl;
 		start = false;
+		cout << "wasd : 카메라 이동" << endl;
+		cout << "t:회전멈추기" << endl;
+		cout << "r : 조명 회전" << endl;
+		cout << "g : 카메라 회전" << endl;
 	}
 
 	model = glm::mat4(1.0f);
@@ -288,192 +552,18 @@ GLvoid drawScene()
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(0);
 
-		glLineWidth(1.0);
+		glLineWidth(2.0);
 		glDrawArrays(GL_LINES, 0, 2);
 	}
 
-	//바닥 그리기
-	for (int i = 0; i < 4; i++)
-	{
-		// 색상 바꾸기
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-		glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), rectColors[i], GL_STATIC_DRAW);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(1);
-
-		// 사각형 그리기
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-		glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), rectShape, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(0);
-
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDrawArrays(GL_QUADS, 0, 4);
-	}
-	//-------------------------------------------------
 	//s r t p 코드 작성시에는 반대 방향으로.
 	model = glm::mat4(1.0f);
-	//M회전
-	model = glm::rotate(model, glm::radians(M), glm::vec3(0.0f, 0.0f, 1.0f));
-	//B이동
-	model = glm::translate(model, glm::vec3(B, 0, 0));
-	//이동
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.15f));
-	//축소
-	model = glm::scale(model, glm::vec3(0.2, 0.2, 0.1));
-
-	//위 몸통
-	for (int i = 0; i < 12; i++) {
-		// modelTransform 변수에 변환 값 적용하기
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &colors[i][0], GL_STATIC_DRAW);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(1);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &cube[i][0], GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(0);
-
-
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-	}
-	//-------------------------------------------------glm::mat4(1.0f)
-	//위 왼쪽 대포
-	model = glm::mat4(1.0f);
-
-	//M회전
-	model = glm::rotate(model, glm::radians(M), glm::vec3(0.0f, 0.0f, 1.0f));
-	//T회전
-	model = glm::rotate(model, glm::radians(T / 3), glm::vec3(1.0f, 0.0f, 0.0f));
-	//B이동
-	model = glm::translate(model, glm::vec3(B, 0, 0));
-
-	//이동
-	model = glm::translate(model, glm::vec3(-0.05f, 0.0f, 0.2f));
-	//축소
-	model = glm::scale(model, glm::vec3(0.2, 0.2, 0.2));
-
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
-
-	qobj = gluNewQuadric(); // 객체 생성하기
-	gluQuadricDrawStyle(qobj, GLU_FILL); // 도형 스타일
-	gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
-	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
-	gluCylinder(qobj, 0.1, 0.1, 0.5, 20, 8); // 객체 만들기
-	//--------------------------------------------------------
-	//위 오른쪽 대포
-	model = glm::mat4(1.0f);
-	//M회전
-	model = glm::rotate(model, glm::radians(M), glm::vec3(0.0f, 0.0f, 1.0f));
-	//T회전
-	model = glm::rotate(model, glm::radians(-T / 3), glm::vec3(1.0f, 0.0f, 0.0f));
-	//B이동
-	model = glm::translate(model, glm::vec3(B, 0, 0));
-
-	//이동
-	model = glm::translate(model, glm::vec3(0.05f, 0.0f, 0.2f));
-	//축소
-	model = glm::scale(model, glm::vec3(0.2, 0.2, 0.2));
-
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
-
-	qobj = gluNewQuadric(); // 객체 생성하기
-	gluQuadricDrawStyle(qobj, GLU_FILL); // 도형 스타일
-	gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
-	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
-	gluCylinder(qobj, 0.1, 0.1, 0.5, 20, 8); // 객체 만들기
-
-	//-------------------------------------------------
-	//s r t p 코드 작성시에는 반대 방향으로.
-	model = glm::mat4(1.0f);
-	//M회전
-	model = glm::rotate(model, glm::radians(M), glm::vec3(0.0f, 0.0f, 1.0f));
-	//B이동
-	model = glm::translate(model, glm::vec3(B, 0, 0));
-
-	//이동
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-
-	//축소
-	model = glm::scale(model, glm::vec3(0.25, 0.25, 0.25));
-
-	//아래 몸통
-	for (int i = 0; i < 12; i++) {
-		// modelTransform 변수에 변환 값 적용하기
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &colors[i][0], GL_STATIC_DRAW);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(1);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-		glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec3), &cube[i][0], GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(0);
-
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-	}
-	//-----------------------------------------------
-	//아래 왼쪽 대포
-	model = glm::mat4(1.0f);
-	//F회전
-	model = glm::rotate(model, glm::radians(-F), glm::vec3(0.0f, 0.0f, 1.0f));
-	//M회전
-	model = glm::rotate(model, glm::radians(M), glm::vec3(0.0f, 0.0f, 1.0f));
-	// x축으로 90도 회전
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	//E이동
-	model = glm::translate(model, glm::vec3(-E, 0, 0));
-	//B이동
-	model = glm::translate(model, glm::vec3(B, 0, 0));
-	//이동
-	model = glm::translate(model, glm::vec3(-0.05f, 0.05f, 0.05f));
-	//축소
-	model = glm::scale(model, glm::vec3(0.25, 0.25, 0.25));
-
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
-
-	qobj = gluNewQuadric(); // 객체 생성하기
-	gluQuadricDrawStyle(qobj, GLU_FILL); // 도형 스타일
-	gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
-	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
-	gluCylinder(qobj, 0.1, 0.1, 0.5, 20, 8); // 객체 만들기
-	//--------------------------------------------------------
-	//아래 오른쪽 대포
-	model = glm::mat4(1.0f);
-	//F회전
-	model = glm::rotate(model, glm::radians(F), glm::vec3(0.0f, 0.0f, 1.0f));
-	//M회전
-	model = glm::rotate(model, glm::radians(M), glm::vec3(0.0f, 0.0f, 1.0f));
-	// x축으로 90도 회전
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	//E이동
-	model = glm::translate(model, glm::vec3(E, 0, 0));
-	//B이동
-	model = glm::translate(model, glm::vec3(B, 0, 0));
-	//이동
-	model = glm::translate(model, glm::vec3(0.05f, 0.05f, 0.05f));
-	//축소
-	model = glm::scale(model, glm::vec3(0.25, 0.25, 0.25));
-
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
-
-	qobj = gluNewQuadric(); // 객체 생성하기
-	gluQuadricDrawStyle(qobj, GLU_FILL); // 도형 스타일
-	gluQuadricNormals(qobj, GLU_SMOOTH); // 생략 가능
-	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 생략 가능
-	gluCylinder(qobj, 0.1, 0.1, 0.5, 20, 8); // 객체 만들기
-
+	cube.draw(shaderProgramID);
+	minicube.draw(shaderProgramID);
+	plain.draw(shaderProgramID);
+	
 	glutSwapBuffers(); //--- 화면에 출력하기
 }
-
 //--- 다시그리기 콜백 함수
 GLvoid Reshape(int w, int h)
 {
@@ -485,6 +575,22 @@ void InitBuffer()
 	glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
 	glBindVertexArray(vao); //--- VAO를 바인드하기
 	glGenBuffers(2, vbo); //--- 2개의 VBO를 지정하고 할당하기
+
+	cube.Init();
+	minicube.Init();
+	minicube.parent = &cube;
+	pyramid.Init();
+	circle.Init();
+	plain.Init();
+
+	cube.worldmatrix.position.y += 0.5;
+
+	minicube.worldmatrix.position.x = 7;
+	minicube.worldmatrix.position.y = 2;
+	minicube.worldmatrix.position.z = -3;
+	minicube.modelmatrix.scale = glm::vec3(0.5, 0.5, 0.5);
+
+	plain.modelmatrix.scale = glm::vec3(30.0, 0.01, 30.0);
 }
 
 void make_shaderProgram()
@@ -505,7 +611,7 @@ void make_shaderProgram()
 
 void make_vertexShaders()
 {
-	vertexSource = filetobuf("vertex2.glsl");
+	vertexSource = filetobuf("vertex3.glsl");
 	//--- 버텍스 세이더 객체 만들기
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	//--- 세이더 코드를 세이더 객체에 넣기
@@ -526,7 +632,7 @@ void make_vertexShaders()
 
 void make_fragmentShaders()
 {
-	fragmentSource = filetobuf("fragment.glsl");
+	fragmentSource = filetobuf("fragment3.glsl");
 	//--- 프래그먼트 세이더 객체 만들기
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	//--- 세이더 코드를 세이더 객체에 넣기
@@ -563,211 +669,110 @@ char* filetobuf(const char* file)
 	return buf; // Return the buffer 
 }
 
-bool cdx1 = true;
-bool bcnt = true, Bcnt = true, mcnt = true, Mcnt = true, Ecnt = true, fcnt = true, Fcnt = true;
-bool tcnt = true, Tcnt = true, rcnt = true, ycnt = true;
-
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
-	case '-':
-		cameraPos.z += 0.1;
+	case 'g':
+		if (GSelectionCnt % 2 == 0)
+		{
+			GSelection = 1;
+		}
+		else
+		{
+			GSelection = 0;
+		}
+		GSelectionCnt += 1;
 		break;
-	case '=':
-		cameraPos.z -= 0.1;
+	case 'G':
+		if (GSelectionCnt % 2 == 0)
+		{
+			GSelection = 2;
+		}
+		else
+		{
+			GSelection = 0;
+		}
+		GSelectionCnt += 1;
 		break;
 	case 'w':
-		cameraDirection.y += 0.1;
+		cameraZ += 0.1;
 		break;
 	case 'a':
-		cameraDirection.x -= 0.1;
+		cameraX += 0.1;
 		break;
 	case 's':
-		cameraDirection.y -= 0.1;
+		cameraZ -= 0.1;
 		break;
-	case 'd':
-		cameraDirection.x += 0.1;
-		break;
-	case 'b':
-		if (Bcnt)
-		{
-			BSelection = 1;
-			Bcnt = false;
-		}
-		else
-		{
-			BSelection = 0;
-			Bcnt = true;
-		}
-		break;
-	case 'B':
-		if (Bcnt)
-		{
-			BSelection = 2;
-			Bcnt = false;
-		}
-		else
-		{
-			BSelection = 0;
-			Bcnt = true;
-		}
+	case'd':
+		cameraX -= 0.1;
 		break;
 	case 'm':
-		if (mcnt)
-		{
-			MSelection = 1;
-			mcnt = false;
-		}
-		else
-		{
-			MSelection = 0;
-			mcnt = true;
-		}
+		MSelection = !MSelection;
 		break;
-	case 'M':
-		if (Mcnt)
+	case 'c':
+		switch (CCnt % 3)
 		{
-			MSelection = 2;
-			Mcnt = false;
+		case 0:
+			CX = 1.0;
+			CY = 0.0;
+			CZ = 0.0;
+			break;
+		case 1:
+			CX = 0.0;
+			CY = 1.0;
+			CZ = 0.0;
+			break;
+		case 2:
+			CX = 0.0;
+			CY = 0.0;
+			CZ = 1.0;
+			break;
 		}
-		else
-		{
-			MSelection = 0;
-			Mcnt = true;
-		}
-		break;
-	case 'e':
-		if (Ecnt)
-		{
-			E += 0.01;
-			if (E > 0.05)
-			{
-				Ecnt = false;
-			}
-		}
-		else
-		{
-			E -= 0.01;
-			if (E < -0.05)
-			{
-				Ecnt = true;
-			}
-		}
-		break;
-	case 'E':
-		break;
-	case 'f':
-		if (fcnt)
-		{
-			FSelection = 1;
-			fcnt = false;
-		}
-		else
-		{
-			FSelection = 0;
-			fcnt = true;
-		}
-		break;
-	case 'F':
-		if (Fcnt)
-		{
-			FSelection = 2;
-			Fcnt = false;
-		}
-		else
-		{
-			FSelection = 0;
-			Fcnt = true;
-		}
+		CCnt++;
 		break;
 	case 't':
-		if (tcnt)
-		{
-			TSelection = 1;
-			tcnt = false;
-		}
-		else
-		{
-			TSelection = 0;
-			tcnt = true;
-		}
-		break;
-	case 'T':
-		if (Tcnt)
-		{
-			TSelection = 2;
-			Tcnt = false;
-		}
-		else
-		{
-			TSelection = 0;
-			Tcnt = true;
-		}
+		RSelection = 0;
+		RSelectionCnt = 0;
+		GSelection = 0;
+		GSelectionCnt = 0;
 		break;
 	case 'z':
-		Z += 1;
+		minicube.worldmatrix.position.z -= 0.1;
+		circle.r += 0.1;
+		circle.update();
 		break;
 	case 'Z':
-		Z -= 1;
-		break;
-	case 'y':
-		if (ycnt)
-		{
-			YSelection = 1;
-			ycnt = false;
-		}
-		else
-		{
-			YSelection = 0;
-			ycnt = true;
-		}
-		break;
-	case 'o':
-		cameraPos = glm::vec3(0.0f, -0.5f, 0.5f);
-		OSelection = 1;
-		O += 1;
+		minicube.worldmatrix.position.z += 0.1;
+		circle.r -= 0.1;
+		circle.update();
 		break;
 	case 'r':
-		cameraDirection = glm::vec3(0.0f, 0.0f, 0.0f);
-		if (rcnt)
+		if (RSelectionCnt % 2 == 0)
 		{
 			RSelection = 1;
-			rcnt = false;
 		}
 		else
 		{
 			RSelection = 0;
-			rcnt = true;
 		}
+		RSelectionCnt += 1;
 		break;
-	case 'x':
-		BSelection = 0;
-		MSelection = 0;
-		FSelection = 0;
-		TSelection = 0;
-		RSelection = 0;
-		YSelection = 0;
+	case 'R':
+		if (RSelectionCnt % 2 == 0)
+		{
+			RSelection = 2;
+		}
+		else
+		{
+			RSelection = 0;
+		}
+		RSelectionCnt += 1;
 		break;
-	case 'c':
-		cameraPos = glm::vec3(0.0f, -0.5f, 0.5f); //--- 카메라 위치
-		cameraDirection = glm::vec3(0.0f, 1.0f, 0.0f); //--- 카메라 바라보는 방향
-		cameraUp = glm::vec3(0.0f, 0.0f, 1.0f); //--- 카메라 위쪽 방향
-		B = 0;
-		BSelection = 0;
-		M = 0;
-		MSelection = 0;
-		E = 0;
-		F = 0;
-		FSelection = 0;
-		T = 0;
-		TSelection = 0;
-		RSelection = 0;
-		YSelection = 0;
-		cdx1 = true;
-		bcnt = true, Bcnt = true, mcnt = true, Mcnt = true, Ecnt = true, fcnt = true, Fcnt = true;
-		tcnt = true, Tcnt = true, rcnt = true, ycnt = true;
-		R = 0;
-		Y = 0;
+	case 'y':
+		YSelection = !YSelection;
+		break;
+	case 'n':
+		NSelection = !NSelection;
 		break;
 	case 'q':
 		glutLeaveMainLoop();
@@ -780,20 +785,16 @@ GLvoid SpecialKeys(int key, int x, int y)
 {
 	switch (key) {
 	case GLUT_KEY_UP:
-		cameraPos.y += 0.1;
-		cameraDirection.y += 0.1;
+		cube.modelmatrix.position.z -= 1;
 		break;
 	case GLUT_KEY_DOWN:
-		cameraPos.y -= 0.1;
-		cameraDirection.y -= 0.1;
+		cube.modelmatrix.position.z += 1;
 		break;
 	case GLUT_KEY_LEFT:
-		cameraPos.x -= 0.1;
-		cameraDirection.x -= 0.1;
+		cube.modelmatrix.position.x -= 1;
 		break;
 	case GLUT_KEY_RIGHT:
-		cameraPos.x += 0.1;
-		cameraDirection.x += 0.1;
+		cube.modelmatrix.position.x += 1;
 		break;
 	}
 	glutPostRedisplay(); // 화면 갱신
@@ -804,40 +805,52 @@ float beforeX, beforeY;
 
 GLvoid Mouse(int button, int state, int x, int y)
 {
-	float openGLX, openGLY;
-
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		WindowToOpenGL(x, y, openGLX, openGLY);
-
-		movingMouse = 0;
-
-		beforeX = openGLX;
-		beforeY = openGLY;
+		ox = x;
+		oy = y;
+		left_button = true;
 	}
-	else if (state == GLUT_UP)
+	else
 	{
-		movingMouse = -1;
+		ox = 0;
+		oy = 0;
+		pre_x_angle = x_angle;
+		pre_y_angle = y_angle;
+		left_button = false;
 	}
 }
 
 GLvoid Motion(int x, int y)
 {
-	if (movingMouse >= 0)
+	if (left_button)
 	{
-		WindowToOpenGL(x, y, openGLX, openGLY);
+		y_angle = x - ox;
+		x_angle = y - oy;
+		x_angle += pre_x_angle;
+		y_angle += pre_y_angle;
 
-		float deltaX = openGLX - beforeX;
-		float deltaY = openGLY - beforeY;
-
-		//이동
-
-		//마우스값 넣기
-		beforeX = openGLX;
-		beforeY = openGLY;
-
-		glutPostRedisplay();  // 화면을 다시 그립니다.
+		y_angle /= 2;
+		x_angle /= 2;
 	}
+	glutPostRedisplay();
+}
+
+GLvoid mouseWheel(int button, int dir, int x, int y)
+{
+	if (dir > 0)
+	{
+		wheel_scale += dir * 0.1;
+	}
+	else if (dir < 0)
+	{
+		wheel_scale += dir * 0.1;
+		if (wheel_scale < 0.1)
+		{
+			wheel_scale = 0.1;
+		}
+	}
+	glutPostRedisplay();
 }
 
 GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y)
@@ -851,65 +864,27 @@ GLvoid TimerFunction(int value)
 	switch (value)
 	{
 	case 1:
-		if (BSelection == 1)
+		if (RSelection==1)
 		{
-			B -= 0.05;
+			cube.worldmatrix.rotation.y += 1;
+			cube.modelmatrix.rotation.y -= 1;
 		}
-		if (BSelection == 2)
+		if (RSelection == 2)
 		{
-			B += 0.05;
+			cube.worldmatrix.rotation.y -= 1;
+			cube.modelmatrix.rotation.y += 1;
 		}
-		if (MSelection == 1)
+		if (GSelection==1)
 		{
-			M -= 2;
+			Gcnt++;
 		}
-		if (MSelection == 2)
+		if (GSelection == 2)
 		{
-			M += 2;
-		}
-		if (FSelection == 1)
-		{
-			F += 2;
-			if (F > 90)
-			{
-				FSelection = 2;
-			}
-		}
-		if (FSelection == 2)
-		{
-			F -= 2;
-			if (F < 0)
-			{
-				FSelection = 1;
-			}
-		}
-
-		if (TSelection == 1)
-		{
-			T += 8;
-			if (T > 90)
-			{
-				TSelection = 2;
-			}
-		}
-		if (TSelection == 2)
-		{
-			T -= 8;
-			if (T < -90)
-			{
-				TSelection = 1;
-			}
-		}
-		if (RSelection == 1)
-		{
-			R += 3;
-		}
-		if (YSelection == 1)
-		{
-			Y += 5;
+			Gcnt--;
 		}
 		break;
 	}
 	glutPostRedisplay();
-	glutTimerFunc(100, TimerFunction, 1);
+	glutTimerFunc(10, TimerFunction, 1);
 }
+//update() : 아예 데이터를 바꾸고 싶을때 쓴다.
