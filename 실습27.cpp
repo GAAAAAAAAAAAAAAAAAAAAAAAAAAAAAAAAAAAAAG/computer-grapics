@@ -207,6 +207,9 @@ struct CUBE :OBJECT
 	}
 };
 CUBE cube;
+CUBE headcube;
+CUBE leftcube;
+CUBE rightcube;
 CUBE plain;
 CUBE minicube;
 
@@ -453,6 +456,9 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 		std::cout << "GLEW Initialized\n";
 	}
 	cube.ReadObj("cube.obj");
+	leftcube.ReadObj("cube.obj");
+	rightcube.ReadObj("cube.obj");
+	headcube.ReadObj("cube.obj");
 	minicube.ReadObj("cube.obj");
 	plain.ReadObj("cube.obj");
 	pyramid.ReadObj("pyramid.obj");
@@ -559,6 +565,9 @@ GLvoid drawScene()
 	//s r t p 코드 작성시에는 반대 방향으로.
 	model = glm::mat4(1.0f);
 	cube.draw(shaderProgramID);
+	headcube.draw(shaderProgramID);
+	leftcube.draw(shaderProgramID);
+	rightcube.draw(shaderProgramID);
 	minicube.draw(shaderProgramID);
 	plain.draw(shaderProgramID);
 	
@@ -577,13 +586,30 @@ void InitBuffer()
 	glGenBuffers(2, vbo); //--- 2개의 VBO를 지정하고 할당하기
 
 	cube.Init();
+	headcube.Init();
+	leftcube.Init();
+	rightcube.Init();
 	minicube.Init();
 	minicube.parent = &cube;
+	headcube.parent = &cube;
+	leftcube.parent = &headcube;
+	rightcube.parent = &headcube;
 	pyramid.Init();
 	circle.Init();
 	plain.Init();
 
 	cube.worldmatrix.position.y += 0.5;
+
+	headcube.modelmatrix.position.y = 0.5;
+	headcube.modelmatrix.scale = glm::vec3(0.65, 0.65, 0.65);
+
+	leftcube.worldmatrix.position.y = 1.0;
+	leftcube.worldmatrix.position.x = -0.2;
+	leftcube.worldmatrix.scale = glm::vec3(0.2, 0.5, 0.2);
+
+	rightcube.worldmatrix.position.y = 1.0;
+	rightcube.worldmatrix.position.x = 0.2;
+	rightcube.worldmatrix.scale = glm::vec3(0.2, 0.5, 0.2);
 
 	minicube.worldmatrix.position.x = 7;
 	minicube.worldmatrix.position.y = 2;
@@ -785,16 +811,20 @@ GLvoid SpecialKeys(int key, int x, int y)
 {
 	switch (key) {
 	case GLUT_KEY_UP:
-		cube.modelmatrix.position.z -= 1;
+		cube.worldmatrix.position.z -= 0.5;
+		minicube.modelmatrix.position.z += 0.5;
 		break;
 	case GLUT_KEY_DOWN:
-		cube.modelmatrix.position.z += 1;
+		cube.worldmatrix.position.z += 0.5;
+		minicube.modelmatrix.position.z -= 0.5;
 		break;
 	case GLUT_KEY_LEFT:
-		cube.modelmatrix.position.x -= 1;
+		cube.worldmatrix.position.x -= 0.5;
+		minicube.modelmatrix.position.x += 0.5;
 		break;
 	case GLUT_KEY_RIGHT:
-		cube.modelmatrix.position.x += 1;
+		cube.worldmatrix.position.x += 0.5;
+		minicube.modelmatrix.position.x -= 0.5;
 		break;
 	}
 	glutPostRedisplay(); // 화면 갱신
@@ -868,11 +898,15 @@ GLvoid TimerFunction(int value)
 		{
 			cube.worldmatrix.rotation.y += 1;
 			cube.modelmatrix.rotation.y -= 1;
+
+			headcube.worldmatrix.rotation.y -= 1;
 		}
 		if (RSelection == 2)
 		{
 			cube.worldmatrix.rotation.y -= 1;
 			cube.modelmatrix.rotation.y += 1;
+
+			headcube.modelmatrix.rotation.y +=1;
 		}
 		if (GSelection==1)
 		{
