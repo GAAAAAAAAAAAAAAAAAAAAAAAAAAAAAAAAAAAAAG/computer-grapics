@@ -647,7 +647,7 @@ GLvoid drawScene()
 	//s r t p 코드 작성시에는 반대 방향으로.
 	model = glm::mat4(1.0f);
 	//cube.draw(shaderProgramID);
-	//pyramid.draw(shaderProgramID);
+	pyramid.draw(shaderProgramID);
 	Rsphere.draw(shaderProgramID);
 	Gsphere.draw(shaderProgramID);
 	Bsphere.draw(shaderProgramID);
@@ -708,8 +708,8 @@ void InitBuffer()
 	plain.worldmatrix.scale = glm::vec3(5, 0.01, 5);
 
 	Rsphere.worldmatrix.position.y = 1;
-	Rsphere.worldmatrix.position.z = 3;
-	Rsphere.worldmatrix.scale = glm::vec3(0.2, 0.2, 0.2);
+	Rsphere.worldmatrix.position.z = -3;
+	Rsphere.worldmatrix.scale = glm::vec3(0.25, 0.25, 0.25);
 		
 	Gsphere.worldmatrix.position.y = 1;
 	Gsphere.worldmatrix.position.z = -2;
@@ -992,7 +992,7 @@ GLvoid TimerFunction(int value)
 		glm::mat4 tempR_Z = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
 		glm::mat4 tempR_X = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(1.0, 0.0, 0.0));
 
-		Rsphere.worldmatrix.position.x = cos(cnt) * 3;
+		Rsphere.worldmatrix.position.x = cos(cnt) * 2;
 		Rsphere.worldmatrix.position.z = sin(cnt) * 3;
 		Rsphere.worldmatrix.position = glm::vec4(Rsphere.worldmatrix.position.x, 0.0, Rsphere.worldmatrix.position.z, 1.0f) * tempR_X;
 
@@ -1001,7 +1001,7 @@ GLvoid TimerFunction(int value)
 		Gsphere.worldmatrix.position = glm::vec4(Gsphere.worldmatrix.position.x, 0.0, Gsphere.worldmatrix.position.z, 1.0f) * tempR_X;
 
 		Bsphere.worldmatrix.position.x = cos(cnt)*3;
-		Bsphere.worldmatrix.position.z = sin(cnt)*3;
+		Bsphere.worldmatrix.position.z = sin(cnt)*2;
 		Bsphere.worldmatrix.position = glm::vec4(Bsphere.worldmatrix.position.x, 0.0, Bsphere.worldmatrix.position.z, 1.0f)*tempR_Z;
 		cnt += 0.05;
 		
