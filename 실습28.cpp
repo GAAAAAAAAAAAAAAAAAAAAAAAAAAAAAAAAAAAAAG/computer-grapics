@@ -19,8 +19,8 @@ random_device rd;
 mt19937 gen(rd());
 uniform_real_distribution<double> XYdis(-1, 1);
 uniform_real_distribution<double> dis(0.0, 1.0);
-uniform_real_distribution<double> speedDis(0.5, 2.5);
-uniform_real_distribution<double> randomXYZ(-3.0, 3.0);
+uniform_real_distribution<double> speedDis(0.02, 0.07);
+uniform_real_distribution<double> randomXYZ(-4.0, 4.0);
 
 struct Transform
 {
@@ -245,10 +245,6 @@ struct SPHERE :OBJECT
 			colordata[i].y = dis(gen);
 			colordata[i].z = dis(gen);
 		}
-		for (int i = 0; i < vertex_count; i++)
-		{
-			vertexdata[i] -= glm::vec3(0.5, 0.5, 0.5);
-		}
 
 		glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
 		glBindVertexArray(vao); //--- VAO를 바인드하기
@@ -293,6 +289,8 @@ struct SPHERE :OBJECT
 		glEnableVertexAttribArray(1);
 	}
 };
+SPHERE sphere;
+SPHERE sphere2;
 SPHERE Rsphere;
 SPHERE Gsphere;
 SPHERE Bsphere;
@@ -443,6 +441,9 @@ struct CIRCLE :OBJECT
 	}
 };
 CIRCLE circle;
+CIRCLE Rcircle;
+CIRCLE Gcircle;
+CIRCLE Bcircle;
 
 GLfloat lineShape[10][2][3] = {};	//--- 선분 위치 값
 
@@ -498,7 +499,9 @@ bool start = true;
 bool RSelection = false;
 float LC_R, LC_G, LC_B;
 bool SSelection = false;
-
+bool MSelection = true;
+int CSelection = 0;
+int PSelection = 0;
 
 void make_shaderProgram();
 void make_vertexShaders();
@@ -540,6 +543,8 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	minicube.ReadObj("cube.obj");
 	plain.ReadObj("cube.obj");
 	pyramid.ReadObj("pyramid.obj");
+	sphere.ReadObj("sphere.obj");
+	sphere2.ReadObj("sphere.obj");
 	Rsphere.ReadObj("sphere.obj");
 	Gsphere.ReadObj("sphere.obj");
 	Bsphere.ReadObj("sphere.obj");
@@ -607,7 +612,7 @@ GLvoid drawScene()
 	unsigned int lightPosLocation = glGetUniformLocation(shaderProgramID, "lightPos"); //--- lightPos 값 전달: (0.0, 0.0, 5.0);
 	glUniform3f(lightPosLocation, lightposition.x, lightposition.y, lightposition.z);
 	unsigned int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor"); //--- lightColor 값 전달: (1.0, 1.0, 1.0) 백색
-	glUniform3f(lightColorLocation, LC_R, LC_G, LC_B);
+	glUniform3f(lightColorLocation, LC_R * (float)MSelection, LC_G * (float)MSelection, LC_B * (float)MSelection);
 	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor"); //--- object Color값 전달: (1.0, 0.5, 0.3)의 색
 	glUniform3f(objColorLocation, 1.0, 0.5, 0.3);
 
@@ -642,15 +647,21 @@ GLvoid drawScene()
 	//s r t p 코드 작성시에는 반대 방향으로.
 	model = glm::mat4(1.0f);
 	//cube.draw(shaderProgramID);
-	pyramid.draw(shaderProgramID);
-	//sphere.draw(shaderProgramID);
+	//pyramid.draw(shaderProgramID);
+	Rsphere.draw(shaderProgramID);
+	Gsphere.draw(shaderProgramID);
+	Bsphere.draw(shaderProgramID);
 	minicube.draw(shaderProgramID);
 	circle.draw(shaderProgramID);
 	plain.draw(shaderProgramID);
-	for (int i = 0; i < 100; i++)
+	if (SSelection)
 	{
-		snow[i].draw(shaderProgramID);
+		for (int i = 0; i < 100; i++)
+		{
+			snow[i].draw(shaderProgramID);
+		}
 	}
+	
 
 	glutSwapBuffers(); //--- 화면에 출력하기
 }
@@ -670,19 +681,44 @@ void InitBuffer()
 	minicube.Init();
 	minicube.parent = &cube;
 	pyramid.Init();
-	//sphere.Init();
+	sphere.Init();
+	sphere2.Init();
+	Rsphere.Init();
+	Gsphere.Init();
+	Bsphere.Init();
+	Rsphere.parent = &sphere;
+	Gsphere.parent = &sphere;
+	Bsphere.parent = &sphere;
 	circle.Init();
 	plain.Init();
 	for (int i = 0; i < 100; i++)
 	{
 		snow[i].Init();
 		snow[i].worldmatrix.position.x = randomXYZ(gen);
+		snow[i].worldmatrix.position.y = 10;
 		snow[i].worldmatrix.position.z = randomXYZ(gen);
 		snow[i].worldmatrix.scale = glm::vec3(0.05, 0.05, 0.05);
 	}
 
+	Rsphere.update({ 1.0, 0.0, 0.0 });
+	Gsphere.update({ 0.0, 1.0, 0.0 });
+	Bsphere.update({ 0.0, 0.0, 1.0 });
+
 	plain.worldmatrix.position.y = -0.5;
 	plain.worldmatrix.scale = glm::vec3(5, 0.01, 5);
+
+	Rsphere.worldmatrix.position.y = 1;
+	Rsphere.worldmatrix.position.z = 3;
+	Rsphere.worldmatrix.scale = glm::vec3(0.2, 0.2, 0.2);
+		
+	Gsphere.worldmatrix.position.y = 1;
+	Gsphere.worldmatrix.position.z = -2;
+	Gsphere.worldmatrix.scale = glm::vec3(0.3, 0.3, 0.3);
+		
+	Bsphere.worldmatrix.position.x = 3;
+	Bsphere.worldmatrix.position.y = 0;
+	Bsphere.worldmatrix.position.z = 3;
+	Bsphere.worldmatrix.scale = glm::vec3(0.5, 0.5, 0.5);
 
 	minicube.worldmatrix.position.y = 3;
 	minicube.worldmatrix.position.z = 3;
@@ -768,6 +804,73 @@ char* filetobuf(const char* file)
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
+	case 'p':
+		PSelection += 1;
+		if (PSelection > 3)
+		{
+			PSelection = 0;
+		}
+		switch (PSelection)
+		{
+		case 0:
+			cube.worldmatrix.rotation.y = 0;
+			cube.modelmatrix.rotation.y = 0;
+
+			minicube.worldmatrix.position.x = 1.0;
+			minicube.worldmatrix.position.y = 3.0;
+			minicube.worldmatrix.position.z = 0.0;
+			break;
+		case 1:
+			cube.worldmatrix.rotation.y = 0;
+			cube.modelmatrix.rotation.y = 0;
+
+			minicube.worldmatrix.position.x = -1.0;
+			minicube.worldmatrix.position.y = 3.0;
+			minicube.worldmatrix.position.z = 0.0;
+			break;
+		case 2:
+			cube.worldmatrix.rotation.y = 0;
+			cube.modelmatrix.rotation.y = 0;
+
+			minicube.worldmatrix.position.x = 0.0;
+			minicube.worldmatrix.position.y = 3.0;
+			minicube.worldmatrix.position.z = 1.0;
+			break;
+		case 3:
+			cube.worldmatrix.rotation.y = 0;
+			cube.modelmatrix.rotation.y = 0;
+
+			minicube.worldmatrix.position.x = 0.0;
+			minicube.worldmatrix.position.y = 3.0;
+			minicube.worldmatrix.position.z = -1.0;
+			break;
+		}
+		break;
+	case 'c':
+		CSelection += 1;
+		if (CSelection > 3)
+		{
+			CSelection = 0;
+		}
+		switch (CSelection)
+		{
+		case 0:
+			LC_R = 1.0, LC_G = 1.0, LC_B = 1.0;
+			break;
+		case 1:
+			LC_R = 1.0, LC_G = 1.0, LC_B = 0.0;
+			break;
+		case 2:
+			LC_R = 0.0, LC_G = 1.0, LC_B = 1.0;
+			break;
+		case 3:
+			LC_R = 1.0, LC_G = 0.0, LC_B = 1.0;
+			break;
+		}
+		break;
+	case 'm':
+		MSelection = !MSelection;
+		break;
 	case 's':
 		SSelection = !SSelection;
 		break;
@@ -879,16 +982,39 @@ GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y)
 	y = 1.0f - (2.0f * mouseY) / windowHeight;
 }
 
+float cnt = 0;
+
 GLvoid TimerFunction(int value)
 {
 	switch (value)
 	{
 	case 1:
+		glm::mat4 tempR_Z = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
+		glm::mat4 tempR_X = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(1.0, 0.0, 0.0));
+
+		Rsphere.worldmatrix.position.x = cos(cnt) * 3;
+		Rsphere.worldmatrix.position.z = sin(cnt) * 3;
+		Rsphere.worldmatrix.position = glm::vec4(Rsphere.worldmatrix.position.x, 0.0, Rsphere.worldmatrix.position.z, 1.0f) * tempR_X;
+
+		Gsphere.worldmatrix.position.x = cos(cnt) * 3;
+		Gsphere.worldmatrix.position.z = sin(cnt) * 3;
+		Gsphere.worldmatrix.position = glm::vec4(Gsphere.worldmatrix.position.x, 0.0, Gsphere.worldmatrix.position.z, 1.0f) * tempR_X;
+
+		Bsphere.worldmatrix.position.x = cos(cnt)*3;
+		Bsphere.worldmatrix.position.z = sin(cnt)*3;
+		Bsphere.worldmatrix.position = glm::vec4(Bsphere.worldmatrix.position.x, 0.0, Bsphere.worldmatrix.position.z, 1.0f)*tempR_Z;
+		cnt += 0.05;
+		
 		if (SSelection)
 		{
 			for (int i = 0; i < 100; i++)
 			{
 				snow[i].worldmatrix.position.y -= snow[i].speed;
+
+				if (snow[i].worldmatrix.position.y < -0.5)
+				{
+					snow[i].worldmatrix.position.y = 10;
+				}
 			}
 		}
 		if (RSelection)
