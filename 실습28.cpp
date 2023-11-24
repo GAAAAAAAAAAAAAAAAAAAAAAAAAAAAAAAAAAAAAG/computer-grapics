@@ -361,8 +361,7 @@ SNOW snow[100];
 
 struct CIRCLE :OBJECT
 {
-
-	float r = 3.0;
+	float r = 1;
 
 	void Init()
 	{
@@ -386,9 +385,9 @@ struct CIRCLE :OBJECT
 		{
 			double random_color = dis(gen);
 
-			colordata[i].x = dis(gen);
-			colordata[i].y = dis(gen);
-			colordata[i].z = dis(gen);
+			colordata[i].x = 1.0f;
+			colordata[i].y = 1.0f;
+			colordata[i].z = 1.0f;
 		}
 
 		glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
@@ -419,19 +418,49 @@ struct CIRCLE :OBJECT
 		glDrawArrays(GL_LINE_LOOP, 0, vertex_count);
 	}
 
-	void update()
+	void update(int index)
 	{
 		float angle = 0;
 		float x, y, z;
 
-		for (int i = 0; i < vertex_count; ++i)
+		switch (index)
 		{
-			angle = (float)i / 360 * 2 * 3.1415926535;
-			x = cos(angle) * r;
-			y = 0;
-			z = sin(angle) * r;
-			vertexdata[i] = glm::vec3(x, y, z);
+		case 1:
+			for (int i = 0; i < vertex_count; ++i)
+			{
+				angle = (float)i / 360 * 2 * 3.1415926535;
+				x = cos(angle) * 2;
+				y = 0;
+				z = sin(angle) * 3;
+
+				vertexdata[i] = glm::vec4(x, y, z, 1.0f)*(glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(1.0, 0.0, 0.0)));
+			}
+			break;
+		case 2:
+			for (int i = 0; i < vertex_count; ++i)
+			{
+				angle = (float)i / 360 * 2 * 3.1415926535;
+				x = cos(angle) * 3;
+				y = 0;
+				z = sin(angle) * 3;
+
+				vertexdata[i] = glm::vec4(x, y, z, 1.0f) * (glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(1.0, 0.0, 0.0)))*(glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0)));
+			}
+			break;
+		case 3:
+			for (int i = 0; i < vertex_count; ++i)
+			{
+				angle = (float)i / 360 * 2 * 3.1415926535;
+				x = cos(angle) * 3;
+				y = 0;
+				z = sin(angle) * 2;
+
+				vertexdata[i] = glm::vec4(x, y, z, 1.0f) * (glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0)));
+			}
+			break;
 		}
+
+		
 		glBindVertexArray(vao);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -440,7 +469,6 @@ struct CIRCLE :OBJECT
 		glEnableVertexAttribArray(0);
 	}
 };
-CIRCLE circle;
 CIRCLE Rcircle;
 CIRCLE Gcircle;
 CIRCLE Bcircle;
@@ -652,7 +680,9 @@ GLvoid drawScene()
 	Gsphere.draw(shaderProgramID);
 	Bsphere.draw(shaderProgramID);
 	minicube.draw(shaderProgramID);
-	circle.draw(shaderProgramID);
+	Rcircle.draw(shaderProgramID);
+	Gcircle.draw(shaderProgramID);
+	Bcircle.draw(shaderProgramID);
 	plain.draw(shaderProgramID);
 	if (SSelection)
 	{
@@ -686,10 +716,14 @@ void InitBuffer()
 	Rsphere.Init();
 	Gsphere.Init();
 	Bsphere.Init();
+	Rcircle.Init();
+	Gcircle.Init();
+	Bcircle.Init();
+	
 	Rsphere.parent = &sphere;
 	Gsphere.parent = &sphere;
 	Bsphere.parent = &sphere;
-	circle.Init();
+	
 	plain.Init();
 	for (int i = 0; i < 100; i++)
 	{
@@ -700,6 +734,9 @@ void InitBuffer()
 		snow[i].worldmatrix.scale = glm::vec3(0.05, 0.05, 0.05);
 	}
 
+	Rcircle.update(1);
+	Gcircle.update(2);
+	Bcircle.update(3);
 	Rsphere.update({ 1.0, 0.0, 0.0 });
 	Gsphere.update({ 0.0, 1.0, 0.0 });
 	Bsphere.update({ 0.0, 0.0, 1.0 });
@@ -707,17 +744,17 @@ void InitBuffer()
 	plain.worldmatrix.position.y = -0.5;
 	plain.worldmatrix.scale = glm::vec3(5, 0.01, 5);
 
-	Rsphere.worldmatrix.position.y = 1;
-	Rsphere.worldmatrix.position.z = -3;
+	/*Rsphere.worldmatrix.position.y = 1;
+	Rsphere.worldmatrix.position.z = -3;*/
 	Rsphere.worldmatrix.scale = glm::vec3(0.25, 0.25, 0.25);
 		
-	Gsphere.worldmatrix.position.y = 1;
-	Gsphere.worldmatrix.position.z = -2;
+	/*Gsphere.worldmatrix.position.y = 1;
+	Gsphere.worldmatrix.position.z = -2;*/
 	Gsphere.worldmatrix.scale = glm::vec3(0.3, 0.3, 0.3);
 		
-	Bsphere.worldmatrix.position.x = 3;
+	/*Bsphere.worldmatrix.position.x = 3;
 	Bsphere.worldmatrix.position.y = 0;
-	Bsphere.worldmatrix.position.z = 3;
+	Bsphere.worldmatrix.position.z = 3;*/
 	Bsphere.worldmatrix.scale = glm::vec3(0.5, 0.5, 0.5);
 
 	minicube.worldmatrix.position.y = 3;
@@ -998,12 +1035,12 @@ GLvoid TimerFunction(int value)
 
 		Gsphere.worldmatrix.position.x = cos(cnt) * 3;
 		Gsphere.worldmatrix.position.z = sin(cnt) * 3;
-		Gsphere.worldmatrix.position = glm::vec4(Gsphere.worldmatrix.position.x, 0.0, Gsphere.worldmatrix.position.z, 1.0f) * tempR_X;
+		Gsphere.worldmatrix.position = glm::vec4(Gsphere.worldmatrix.position.x, 0.0, Gsphere.worldmatrix.position.z, 1.0f) * tempR_X*tempR_Z;
 
 		Bsphere.worldmatrix.position.x = cos(cnt)*3;
 		Bsphere.worldmatrix.position.z = sin(cnt)*2;
 		Bsphere.worldmatrix.position = glm::vec4(Bsphere.worldmatrix.position.x, 0.0, Bsphere.worldmatrix.position.z, 1.0f)*tempR_Z;
-		cnt += 0.05;
+		cnt += 0.02;
 		
 		if (SSelection)
 		{
