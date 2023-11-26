@@ -15,7 +15,7 @@ uniform vec3 lightColor;
 
 void main(void)
 {
-	vec3 ambientLight = vec3(0.1f, 0.1f, 0.1f);
+	vec3 ambientLight = vec3(0.3f, 0.3f, 0.3f);
 	vec3 ambient = ambientLight * lightColor;
 
 	vec3 NV = normalize(Normal);
