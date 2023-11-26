@@ -232,6 +232,7 @@ struct PYRAMID :OBJECT
 	}
 };
 PYRAMID pyramid;
+PYRAMID TriSierpinski;
 
 struct SPHERE :OBJECT
 {
@@ -1066,3 +1067,30 @@ GLvoid TimerFunction(int value)
 }
 
 //update() : 아예 데이터를 바꾸고 싶을때 쓴다.
+
+void Tri_Sierpinski(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, int depth)
+{
+	if (depth == 0) {
+		TriSierpinski.vertexdata[0](x1, y1, z1);
+		m_vertex.emplace_back(x2, y2, z2);
+		m_vertex.emplace_back(x3, y3, z3);
+		m_normal.emplace_back(0.0, 0.0, 1.0);
+		m_normal.emplace_back(0.0, 0.0, 1.0);
+		m_normal.emplace_back(0.0, 0.0, 1.0);
+	}
+	else {
+		float mid1x = (x1 + x2) / 2;
+		float mid1y = (y1 + y2) / 2;
+		float mid1z = (z1 + z2) / 2;
+		float mid2x = (x2 + x3) / 2;
+		float mid2y = (y2 + y3) / 2;
+		float mid2z = (z2 + z3) / 2;
+		float mid3x = (x1 + x3) / 2;
+		float mid3y = (y1 + y3) / 2;
+		float mid3z = (z1 + z3) / 2;
+
+		Tri_Sierpinski(x1, y1, z1, mid1x, mid1y, mid1z, mid3x, mid3y, mid3z, depth - 1);
+		Tri_Sierpinski(mid1x, mid1y, mid1z, x2, y2, z2, mid2x, mid2y, mid2z, depth - 1);
+		Tri_Sierpinski(mid3x, mid3y, mid3z, mid2x, mid2y, mid2z, x3, y3, z3, depth - 1);
+	}
+}

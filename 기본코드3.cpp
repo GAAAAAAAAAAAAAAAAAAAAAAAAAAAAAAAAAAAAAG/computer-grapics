@@ -242,11 +242,6 @@ struct SPHERE :OBJECT
 			colordata[i].y = dis(gen);
 			colordata[i].z = dis(gen);
 		}
-		for (int i = 0; i < vertex_count; i++)
-		{
-			vertexdata[i] -= glm::vec3(0.5, 0.5, 0.5);
-		}
-
 		glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
 		glBindVertexArray(vao); //--- VAO를 바인드하기
 		glGenBuffers(3, vbo); //--- 3개의 VBO를 지정하고 할당하기
@@ -439,7 +434,6 @@ GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y);
 GLvoid Motion(int x, int y);
 GLvoid TimerFunction(int value);
 GLvoid SpecialKeys(int key, int x, int y);
-void ReadObj(FILE* path);
 GLvoid mouseWheel(int button, int dir, int x, int y);
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
