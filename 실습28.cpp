@@ -12,6 +12,7 @@
 #include <cmath>
 #include <random>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -232,7 +233,7 @@ struct PYRAMID :OBJECT
 	}
 };
 PYRAMID pyramid;
-PYRAMID TriSierpinski;
+PYRAMID Sierpinski[1000];
 
 struct SPHERE :OBJECT
 {
@@ -531,6 +532,7 @@ bool SSelection = false;
 bool MSelection = true;
 int CSelection = 0;
 int PSelection = 0;
+bool Selection[5]{};
 
 void make_shaderProgram();
 void make_vertexShaders();
@@ -545,8 +547,8 @@ GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y);
 GLvoid Motion(int x, int y);
 GLvoid TimerFunction(int value);
 GLvoid SpecialKeys(int key, int x, int y);
-void ReadObj(FILE* path);
 GLvoid mouseWheel(int button, int dir, int x, int y);
+void pyramid_Sierpinski(PYRAMID pyramid);
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
@@ -580,6 +582,10 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	for (int i = 0; i < 100; i++)
 	{
 		snow[i].ReadObj("sphere.obj");
+	}
+	for (int i = 0; i < 1000; i++)
+	{
+		Sierpinski[i].ReadObj("pyramid.obj");
 	}
 
 	LC_R = 1.0, LC_G = 1.0, LC_B = 1.0;
@@ -676,7 +682,7 @@ GLvoid drawScene()
 	//s r t p 코드 작성시에는 반대 방향으로.
 	model = glm::mat4(1.0f);
 	//cube.draw(shaderProgramID);
-	pyramid.draw(shaderProgramID);
+	//pyramid.draw(shaderProgramID);
 	Rsphere.draw(shaderProgramID);
 	Gsphere.draw(shaderProgramID);
 	Bsphere.draw(shaderProgramID);
@@ -692,8 +698,14 @@ GLvoid drawScene()
 			snow[i].draw(shaderProgramID);
 		}
 	}
+	if (Selection[0])
+	{
+		for (int i = 0; i < 5; ++i)
+		{
+			Sierpinski[i].draw(shaderProgramID);
+		}
+	}
 	
-
 	glutSwapBuffers(); //--- 화면에 출력하기
 }
 //--- 다시그리기 콜백 함수
@@ -733,6 +745,10 @@ void InitBuffer()
 		snow[i].worldmatrix.position.y = 10;
 		snow[i].worldmatrix.position.z = randomXYZ(gen);
 		snow[i].worldmatrix.scale = glm::vec3(0.05, 0.05, 0.05);
+	}
+	for (int i = 0; i < 1000; i++)
+	{
+		Sierpinski[i].Init();
 	}
 
 	Rcircle.update(1);
@@ -842,6 +858,20 @@ char* filetobuf(const char* file)
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
+	case '0':
+		break;
+	case '1':
+		pyramid_Sierpinski(pyramid);
+		Selection[0] = true;
+		break;
+	case '2':
+		break;
+	case '3':
+		break;
+	case '4':
+		break;
+	case '5':
+		break;
 	case 'p':
 		PSelection += 1;
 		if (PSelection > 3)
@@ -1048,7 +1078,6 @@ GLvoid TimerFunction(int value)
 			for (int i = 0; i < 100; i++)
 			{
 				snow[i].worldmatrix.position.y -= snow[i].speed;
-
 				if (snow[i].worldmatrix.position.y < -0.5)
 				{
 					snow[i].worldmatrix.position.y = 10;
@@ -1065,32 +1094,99 @@ GLvoid TimerFunction(int value)
 	glutPostRedisplay();
 	glutTimerFunc(10, TimerFunction, 1);
 }
-
 //update() : 아예 데이터를 바꾸고 싶을때 쓴다.
 
-void Tri_Sierpinski(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, int depth)
-{
-	if (depth == 0) {
-		TriSierpinski.vertexdata[0](x1, y1, z1);
-		m_vertex.emplace_back(x2, y2, z2);
-		m_vertex.emplace_back(x3, y3, z3);
-		m_normal.emplace_back(0.0, 0.0, 1.0);
-		m_normal.emplace_back(0.0, 0.0, 1.0);
-		m_normal.emplace_back(0.0, 0.0, 1.0);
-	}
-	else {
-		float mid1x = (x1 + x2) / 2;
-		float mid1y = (y1 + y2) / 2;
-		float mid1z = (z1 + z2) / 2;
-		float mid2x = (x2 + x3) / 2;
-		float mid2y = (y2 + y3) / 2;
-		float mid2z = (z2 + z3) / 2;
-		float mid3x = (x1 + x3) / 2;
-		float mid3y = (y1 + y3) / 2;
-		float mid3z = (z1 + z3) / 2;
+//void Tri_Sierpinski(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, int depth) {
+//	if (depth == 0) {
+//		pyramid.m_vertex.emplace_back(x1, y1, z1);
+//		pyramid.m_vertex.emplace_back(x2, y2, z2);
+//		pyramid.m_vertex.emplace_back(x3, y3, z3);
+//		pyramid.m_normal.emplace_back(0.0, 0.0, 1.0);
+//		pyramid.m_normal.emplace_back(0.0, 0.0, 1.0);
+//		pyramid.m_normal.emplace_back(0.0, 0.0, 1.0);
+//	}
+//	else {
+//		float mid1x = (x1 + x2) / 2;
+//		float mid1y = (y1 + y2) / 2;
+//		float mid1z = (z1 + z2) / 2;
+//		float mid2x = (x2 + x3) / 2;
+//		float mid2y = (y2 + y3) / 2;
+//		float mid2z = (z2 + z3) / 2;
+//		float mid3x = (x1 + x3) / 2;
+//		float mid3y = (y1 + y3) / 2;
+//		float mid3z = (z1 + z3) / 2;
+//
+//		Tri_Sierpinski(x1, y1, z1, mid1x, mid1y, mid1z, mid3x, mid3y, mid3z, depth - 1);
+//		Tri_Sierpinski(mid1x, mid1y, mid1z, x2, y2, z2, mid2x, mid2y, mid2z, depth - 1);
+//		Tri_Sierpinski(mid3x, mid3y, mid3z, mid2x, mid2y, mid2z, x3, y3, z3, depth - 1);
+//	}
+//}
 
-		Tri_Sierpinski(x1, y1, z1, mid1x, mid1y, mid1z, mid3x, mid3y, mid3z, depth - 1);
-		Tri_Sierpinski(mid1x, mid1y, mid1z, x2, y2, z2, mid2x, mid2y, mid2z, depth - 1);
-		Tri_Sierpinski(mid3x, mid3y, mid3z, mid2x, mid2y, mid2z, x3, y3, z3, depth - 1);
-	}
+int pyramid_Sierpinski_cnt{};
+
+void pyramid_Sierpinski(PYRAMID pyramid)
+{
+	glm::vec3 V1 = pyramid.vertexdata[0];
+	glm::vec3 V2 = pyramid.vertexdata[1];
+	glm::vec3 V3 = pyramid.vertexdata[2];
+	glm::vec3 V4 = pyramid.vertexdata[3];
+	glm::vec3 V5 = pyramid.vertexdata[4];
+
+	glm::vec3 M1 = glm::vec3((V2.x- V1.x) / 2 , V1.y , V1.z);
+	glm::vec3 M2 = glm::vec3(V2.x ,V2.y , (V3.z - V2.z) / 2);
+	glm::vec3 M3 = glm::vec3((V3.x- V4.x) / 2 , V3.y , V3.z);
+	glm::vec3 M4 = glm::vec3(V4.x , V4.y , (V4.z - V1.z) / 2);
+	glm::vec3 M5 = glm::vec3((V3.x - V1.x) / 2 , V1.y , (V3.z - V1.z) / 2);
+
+	glm::vec3 M6 = glm::vec3((M5.x - V1.x) / 2 , (V5.y - M5.y) / 2 , (M5.z - V1.z) / 2);
+	glm::vec3 M7 = glm::vec3((M2.x - M1.x) / 2 , (V5.y - M5.y) / 2 , (M2.z - M1.z) / 2);
+	glm::vec3 M8 = glm::vec3((V3.x - M5.x) / 2 , (V5.y - M5.y) / 2 , (V3.z - M5.z) / 2);
+	glm::vec3 M9 = glm::vec3((M3.x - M4.x) / 2 , (V5.y - M5.y) / 2 , (M3.z - M4.z) / 2);
+
+	//PYRAMID *Sierpinski_pyramid = new PYRAMID [5];
+	
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[0] = V1;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[1] = M1;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[2] = M5;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[3] = M4;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[4] = M6;
+	Sierpinski[pyramid_Sierpinski_cnt].update();
+
+	pyramid_Sierpinski_cnt++;
+
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[0] = M1;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[1] = V2;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[2] = M2;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[3] = M5;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[4] = M7;
+	Sierpinski[pyramid_Sierpinski_cnt].update();
+
+	pyramid_Sierpinski_cnt++;
+
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[0] = M5;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[1] = M2;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[2] = V3;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[3] = M3;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[4] = M8;
+	Sierpinski[pyramid_Sierpinski_cnt].update();
+
+	pyramid_Sierpinski_cnt++;
+
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[0] = M4;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[1] = M5;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[2] = M3;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[3] = V4;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[4] = M9;
+	Sierpinski[pyramid_Sierpinski_cnt].update();
+
+	pyramid_Sierpinski_cnt++;
+
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[0] = M6;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[1] = M7;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[2] = M8;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[3] = M9;
+	Sierpinski[pyramid_Sierpinski_cnt].vertexdata[4] = V5;
+	Sierpinski[pyramid_Sierpinski_cnt].update();
+
+	pyramid_Sierpinski_cnt++;
 }
