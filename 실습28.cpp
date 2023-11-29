@@ -233,6 +233,7 @@ struct PYRAMID :OBJECT
 	}
 };
 PYRAMID pyramid;
+vector<PYRAMID> pyramids;
 PYRAMID Sierpinski[1000];
 
 struct SPHERE :OBJECT
@@ -533,6 +534,7 @@ bool MSelection = true;
 int CSelection = 0;
 int PSelection = 0;
 bool Selection[5]{};
+int tri_level{};
 
 void make_shaderProgram();
 void make_vertexShaders();
@@ -549,6 +551,7 @@ GLvoid TimerFunction(int value);
 GLvoid SpecialKeys(int key, int x, int y);
 GLvoid mouseWheel(int button, int dir, int x, int y);
 void pyramid_Sierpinski(PYRAMID pyramid);
+void init_tri(int level, float scale, float x, float y, float z, float height, float length);
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
@@ -698,12 +701,9 @@ GLvoid drawScene()
 			snow[i].draw(shaderProgramID);
 		}
 	}
-	if (Selection[0])
+	for (auto o : pyramids)
 	{
-		for (int i = 0; i < 5; ++i)
-		{
-			Sierpinski[i].draw(shaderProgramID);
-		}
+		o.draw(shaderProgramID);
 	}
 	
 	glutSwapBuffers(); //--- 화면에 출력하기
@@ -859,18 +859,14 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
 	case '0':
-		break;
 	case '1':
-		pyramid_Sierpinski(pyramid);
-		Selection[0] = true;
-		break;
 	case '2':
-		break;
 	case '3':
-		break;
 	case '4':
-		break;
 	case '5':
+		pyramids.clear();
+		tri_level = key - '0';
+		init_tri(tri_level, 1.0f, 0, 0, 0, 1.0f, 1.0f);
 		break;
 	case 'p':
 		PSelection += 1;
@@ -1189,4 +1185,22 @@ void pyramid_Sierpinski(PYRAMID pyramid)
 	Sierpinski[pyramid_Sierpinski_cnt].update();
 
 	pyramid_Sierpinski_cnt++;
+}
+
+void init_tri(int level, float scale, float x, float y, float z, float height, float length)
+{
+	if (level == 0)
+	{
+		pyramid.modelmatrix.scale = glm::vec3(scale * 1.1, scale * 1.1, scale * 1.1);
+		pyramid.modelmatrix.position = glm::vec3(x, y, z);
+		pyramids.push_back(pyramid);
+	}
+	else
+	{
+		init_tri(level - 1, scale / 2, x, y + height / 2, z, height / 2, length / 2);
+		init_tri(level - 1, scale / 2, x - length / 4, y, z - length / 4, height / 2, length / 2);
+		init_tri(level - 1, scale / 2, x + length / 4, y, z - length / 4, height / 2, length / 2);
+		init_tri(level - 1, scale / 2, x - length / 4, y, z + length / 4, height / 2, length / 2);
+		init_tri(level - 1, scale / 2, x + length / 4, y, z + length / 4, height / 2, length / 2);
+	}
 }
