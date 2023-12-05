@@ -6,7 +6,7 @@
 in vec3 out_Color; //--- 버텍스 세이더에게서 전달 받음
 in vec3 FragPos;
 in vec3 Normal;
-in vec2 TexCoord;
+in vec3 TexCoord;
 
 out vec4 FragColor; //--- 색상 출력
 
@@ -18,7 +18,8 @@ uniform sampler2D outTexture;
 void main(void)
 {
 	
-	vec3 ambientLight = vec3(0.3f, 0.3f, 0.3f);
+	//vec3 ambientLight = vec3(0.3f, 0.3f, 0.3f);
+	vec3 ambientLight = vec3(1.0f, 1.0f, 1.0f);
 	vec3 ambient = ambientLight * lightColor;
 
 	vec3 NV = normalize(Normal);
@@ -35,5 +36,6 @@ void main(void)
 
 	vec3 result = (diffuse + specular + ambient) * out_Color;
 	FragColor = vec4(result, 1.0);
-	FragColor = texture(outTexture, TexCoord) * FragColor;
+	vec2 tex = vec2(TexCoord.x, TexCoord.y);
+	FragColor = texture(outTexture, tex) * FragColor;
 }

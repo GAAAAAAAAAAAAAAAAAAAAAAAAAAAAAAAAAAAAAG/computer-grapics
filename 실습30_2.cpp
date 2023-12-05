@@ -1,5 +1,4 @@
 #define _CRT_SECURE_NO_WARNINGS //--- 프로그램 맨 앞에 선언할 것
-#define STB_IMAGE_IMPLEMENTATION
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -13,8 +12,6 @@
 #include <cmath>
 #include <random>
 #include <string>
-#include "stb_image.h"
-
 
 using namespace std;
 
@@ -22,10 +19,6 @@ random_device rd;
 mt19937 gen(rd());
 uniform_real_distribution<double> XYdis(-1, 1);
 uniform_real_distribution<double> dis(0.0, 1.0);
-
-void InitTexture();
-int widthImage, heightImage, numberOfChannel;
-unsigned int textures[2];
 
 struct Transform
 {
@@ -82,7 +75,7 @@ struct OBJECT {
 		glm::vec3* face;
 		glm::vec3* texture;
 		glm::vec3* normal;
-		
+
 		glm::vec3* vertexdata;
 		glm::vec3* texturedata;
 		glm::vec3* normaldata;
@@ -147,44 +140,44 @@ struct OBJECT {
 			}
 		}
 		cout << "읽어온 데이터" << endl;
-		
+
 		cout << "버텍스" << endl;
 		for (int i = 0; i < v_count; ++i)
 		{
-			cout << vertex[i].x << vertex[i].y << vertex[i].z << endl;
+			cout << vertex[i].x << ' '<< vertex[i].y << ' ' << vertex[i].z << endl;
 		}
 		cout << "노멀" << endl;
 		for (int i = 0; i < vn_count; ++i)
 		{
-			cout << normal[i].x << normal[i].y << normal[i].z << endl;
+			cout << normal[i].x << ' ' << normal[i].y << ' ' << normal[i].z << endl;
 		}
 		cout << "텍스쳐" << endl;
 		for (int i = 0; i < vt_count; ++i)
 		{
-			cout << texture[i].x << texture[i].y << texture[i].z << endl;
+			cout << texture[i].x << ' ' << texture[i].y << ' ' << texture[i].z << endl;
 		}
-		
-		
+
+
 		cout << "실제 버텍스" << endl;
 		for (int i = 0; i < vertex_count; ++i)
 		{
-			cout << vertexdata[i].x << vertexdata[i].y << vertexdata[i].z << endl;
+			cout << vertexdata[i].x << ' ' << vertexdata[i].y << ' ' << vertexdata[i].z << endl;
 		}
 		cout << "실제 노멀" << endl;
 		for (int i = 0; i < vertex_count; ++i)
 		{
-			cout << normaldata[i].x << normaldata[i].y << normaldata[i].z << endl;
+			cout << normaldata[i].x << ' ' << normaldata[i].y << ' ' << normaldata[i].z << endl;
 		}
 		cout << "실제 텍스쳐" << endl;
 		for (int i = 0; i < vertex_count; ++i)
 		{
-			cout << texturedata[i].x << texturedata[i].y << texturedata[i].z << endl;
+			cout << texturedata[i].x << ' ' << texturedata[i].y << ' ' << texturedata[i].z << endl;
 		}
-		
-		delete[] vertex;
+
+		/*delete[] vertex;
 		delete[] texture;
 		delete[] normal;
-		delete[] face;
+		delete[] face;*/
 	}
 
 	glm::mat4 GetTransform()
@@ -219,7 +212,7 @@ struct CUBE :OBJECT
 
 		glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
 		glBindVertexArray(vao); //--- VAO를 바인드하기
-		glGenBuffers(4, vbo); //--- 4개의 VBO를 지정하고 할당하기
+		glGenBuffers(3, vbo); //--- 3개의 VBO를 지정하고 할당하기
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
@@ -235,22 +228,6 @@ struct CUBE :OBJECT
 		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), normaldata, GL_STATIC_DRAW);
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(2);
-
-		//unsigned int texture;
-		//BITMAP* bmp;
-		//glGenTextures(1, &texture); //--- 텍스처 생성
-		//glBindTexture(GL_TEXTURE_2D, texture); //--- 텍스처 바인딩
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); //--- 현재 바인딩된 텍스처의 파라미터 설정하기
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//unsigned char* texturedata = LoadDIBitmap("texture.bmp", &bmp); //--- 텍스처로 사용할 비트맵 이미지 로드하기
-		//glTexImage2D(GL_TEXTURE_2D, 0, 3, 100, 100, 0, GL_RGB, GL_UNSIGNED_BYTE, texturedata); //---텍스처 이미지 정의
-
-		//glBindBuffer(GL_ARRAY_BUFFER, vbo[3]);
-		//glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), texturedata, GL_STATIC_DRAW);
-		//glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		//glEnableVertexAttribArray(3);
 	}
 
 	void draw(int shaderID)
@@ -258,10 +235,7 @@ struct CUBE :OBJECT
 		unsigned int modelLocation = glGetUniformLocation(shaderID, "model");
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GetTransform() * GetmodelTransform()));
 		glBindVertexArray(vao);
-
-		//glBindVertexArray(vao[0]); //--- 첫 번째 폴리곤
-		//glBindTexture(GL_TEXTURE_2D, textures[0]); //--- texture[0]을 사용하여 폴리곤을 그린다
-		//glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+		glDrawArrays(GL_TRIANGLES, 0, vertex_count);
 	}
 
 	void update()
@@ -296,7 +270,7 @@ struct PYRAMID :OBJECT
 
 		glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
 		glBindVertexArray(vao); //--- VAO를 바인드하기
-		glGenBuffers(4, vbo); //--- 4개의 VBO를 지정하고 할당하기
+		glGenBuffers(3, vbo); //--- 3개의 VBO를 지정하고 할당하기
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
@@ -317,23 +291,14 @@ struct PYRAMID :OBJECT
 		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), texturedata, GL_STATIC_DRAW);
 		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(3);
-
 	}
 
 	void draw(int shaderID)
 	{
-
 		unsigned int modelLocation = glGetUniformLocation(shaderID, "model");
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GetTransform() * GetmodelTransform()));
 		glBindVertexArray(vao);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textures[0]); //--- texture[0]을 사용하여 폴리곤을 그린다.
-		
 		glDrawArrays(GL_TRIANGLES, 0, vertex_count);
-		//glBindVertexArray(vao[0]); //--- 첫 번째 폴리곤
-		//glBindTexture(GL_TEXTURE_2D, texture[0]); //--- texture[0]을 사용하여 폴리곤을 그린다
-		//glDrawArrays(GL_TRIANGLES, 0, vertex_count);
-
 	}
 
 	void update()
@@ -347,7 +312,6 @@ struct PYRAMID :OBJECT
 	}
 };
 PYRAMID pyramid;
-PYRAMID minipyramid;
 
 struct SPHERE :OBJECT
 {
@@ -575,17 +539,15 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	{
 		std::cout << "GLEW Initialized\n";
 	}
-	pyramid.ReadObj("pyramid2.obj");
-	minipyramid.ReadObj("pyramid2.obj");
 	//cube.ReadObj("cube.obj");
 	//minicube.ReadObj("cube.obj");
+	pyramid.ReadObj("pyramid2.obj");
 	//sphere.ReadObj("sphere.obj");
 
 	//--- 세이더 읽어와서 세이더 프로그램 만들기
 	make_shaderProgram(); //--- 세이더 프로그램 만들기
 	InitBuffer();
-	InitTexture();
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE); //--- 상태 설정은 필요한 곳에서 하면 된다.
 	//glDisable(GL_DEPTH_TEST | GL_CULL_FACE);	//해제
 
@@ -633,7 +595,7 @@ GLvoid drawScene()
 	unsigned int projectionLocation = glGetUniformLocation(shaderProgramID, "projection");
 	glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(perspect));
 
-	glm::mat4 lightmatrix = minipyramid.GetTransform(); // 주어진 mat4 행렬
+	glm::mat4 lightmatrix = minicube.GetTransform(); // 주어진 mat4 행렬
 	glm::vec3 lightposition = glm::vec3(lightmatrix[3]); // 행렬의 마지막 열을 사용하여 위치 추출
 
 	unsigned int lightPosLocation = glGetUniformLocation(shaderProgramID, "lightPos"); //--- lightPos 값 전달: (0.0, 0.0, 5.0);
@@ -673,10 +635,8 @@ GLvoid drawScene()
 
 	//s r t p 코드 작성시에는 반대 방향으로.
 	model = glm::mat4(1.0f);
-
 	//cube.draw(shaderProgramID);
 	pyramid.draw(shaderProgramID);
-	minipyramid.draw(shaderProgramID);
 	//sphere.draw(shaderProgramID);
 	//minicube.draw(shaderProgramID);
 	//circle.draw(shaderProgramID);
@@ -695,32 +655,16 @@ void InitBuffer()
 	glBindVertexArray(vao); //--- VAO를 바인드하기
 	glGenBuffers(2, vbo); //--- 2개의 VBO를 지정하고 할당하기
 
-	//cube.Init();
-	//minicube.Init();
-	//minicube.parent = &cube;
+	cube.Init();
+	minicube.Init();
+	minicube.parent = &cube;
 	pyramid.Init();
-	minipyramid.Init();
-	minipyramid.parent = &pyramid;
-	//sphere.Init();
-	//circle.Init();
-	pyramid.worldmatrix.scale = glm::vec3(10.0f, 10.0f, 10.0f);
-	minipyramid.worldmatrix.position.z = -3;
-	minipyramid.modelmatrix.scale = glm::vec3(0.5, 0.5, 0.5);
-}
+	sphere.Init();
+	circle.Init();
 
-//void InitTexture()
-//{
-//	unsigned int texture;
-//	BITMAP* bmp;
-//	glGenTextures(1, &texture); //--- 텍스처 생성
-//	glBindTexture(GL_TEXTURE_2D, texture); //--- 텍스처 바인딩
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); //--- 현재 바인딩된 텍스처의 파라미터 설정하기
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//	unsigned char* data = LoadDIBitmap("texture.bmp", &bmp); //--- 텍스처로 사용할 비트맵 이미지 로드하기
-//	glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data); //---텍스처 이미지 정의
-//}
+	minicube.worldmatrix.position.z = -3;
+	minicube.modelmatrix.scale = glm::vec3(0.5, 0.5, 0.5);
+}
 
 void make_shaderProgram()
 {
@@ -740,7 +684,7 @@ void make_shaderProgram()
 
 void make_vertexShaders()
 {
-	vertexSource = filetobuf("vertex4.glsl");
+	vertexSource = filetobuf("vertex3.glsl");
 	//--- 버텍스 세이더 객체 만들기
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	//--- 세이더 코드를 세이더 객체에 넣기
@@ -761,7 +705,7 @@ void make_vertexShaders()
 
 void make_fragmentShaders()
 {
-	fragmentSource = filetobuf("fragment4.glsl");
+	fragmentSource = filetobuf("fragment3.glsl");
 	//--- 프래그먼트 세이더 객체 만들기
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	//--- 세이더 코드를 세이더 객체에 넣기
@@ -894,33 +838,3 @@ GLvoid TimerFunction(int value)
 }
 
 //update() : 아예 데이터를 바꾸고 싶을때 쓴다.
-
-
-void InitTexture()
-{
-	glGenTextures(2, textures);
-	//--- texture[0]
-	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	unsigned char* data = stbi_load("texture.bmp", &widthImage, &heightImage, &numberOfChannel, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, widthImage, heightImage, 0, GL_RGB, GL_UNSIGNED_BYTE, data); //---텍스처 이미지 정의
-
-	//--- texture[1]
-	glBindTexture(GL_TEXTURE_2D, textures[1]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	unsigned char* data2 = stbi_load("texture.bmp", &widthImage, &heightImage, &numberOfChannel, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, widthImage, heightImage, 0, GL_RGB, GL_UNSIGNED_BYTE, data2); //---텍스처 이미지 정의
-	glUseProgram(shaderProgramID);
-	int tLocation1 = glGetUniformLocation(shaderProgramID, "outTexture"); //--- outTexture1 유니폼 샘플러의 위치를 가져옴
-	glUniform1i(tLocation1, 0); //--- 샘플러를 0번 유닛으로 설정
-	int tLocation2 = glGetUniformLocation(shaderProgramID, "outTexture2"); //--- outTexture2 유니폼 샘플러의 위치를 가져옴
-	glUniform1i(tLocation2, 1); //--- 샘플러를 1번 유닛으로 설정
-
-	stbi_image_free(data);
-}
