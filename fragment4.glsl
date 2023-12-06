@@ -18,8 +18,8 @@ uniform sampler2D outTexture;
 void main(void)
 {
 	
-	//vec3 ambientLight = vec3(0.3f, 0.3f, 0.3f);
-	vec3 ambientLight = vec3(1.0f, 1.0f, 1.0f);
+	vec3 ambientLight = vec3(0.3f, 0.3f, 0.3f);
+	//vec3 ambientLight = vec3(1.0f, 1.0f, 1.0f);
 	vec3 ambient = ambientLight * lightColor;
 
 	vec3 NV = normalize(Normal);
