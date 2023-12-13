@@ -1,4 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS //--- 프로그램 맨 앞에 선언할 것
+#define STB_IMAGE_IMPLEMENTATION
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -12,6 +13,7 @@
 #include <cmath>
 #include <random>
 #include <string>
+#include "stb_image.h"
 
 using namespace std;
 
@@ -19,6 +21,10 @@ random_device rd;
 mt19937 gen(rd());
 uniform_real_distribution<double> XYdis(-1, 1);
 uniform_real_distribution<double> dis(0.0, 1.0);
+
+void InitTexture();
+int widthImage, heightImage, numberOfChannel;
+unsigned int textures[8];
 
 struct Transform
 {
@@ -38,19 +44,22 @@ struct Transform
 };
 
 struct OBJECT {
-	GLuint vao, vbo[3];
+	GLuint vao, vbo[4];
 	Transform worldmatrix;
 	Transform modelmatrix;
 	OBJECT* parent{ nullptr };
 
 	glm::vec3* vertex;
 	glm::vec3* face;
+
 	glm::vec3* vertexdata;
 	glm::vec3* normaldata;
-	glm::vec3* colordata;
+	glm::vec4* colordata;
+	glm::vec3* texturedata;
 
 	int v_count = 0;
 	int f_count = 0;
+
 	int vertex_count = f_count * 3;
 
 	void ReadObj(string fileName)
@@ -73,7 +82,8 @@ struct OBJECT {
 		face = new glm::vec3[f_count];
 		vertexdata = new glm::vec3[vertex_count];
 		normaldata = new glm::vec3[vertex_count];
-		colordata = new glm::vec3[vertex_count];
+		colordata = new glm::vec4[vertex_count];
+		texturedata = new glm::vec3[vertex_count];
 
 		int v_incount = 0;
 		int f_incount = 0;
@@ -123,18 +133,28 @@ struct CUBE :OBJECT
 		{
 			double random_color = dis(gen);
 
-			colordata[i].x = dis(gen);
-			colordata[i].y = dis(gen);
-			colordata[i].z = dis(gen);
+			colordata[i].x = 1.0;
+			colordata[i].y = 1.0;
+			colordata[i].z = 1.0;
+			colordata[i].a = 0.5;
 		}
 		for (int i = 0; i < vertex_count; i++)
 		{
 			vertexdata[i] -= glm::vec3(0.5, 0.5, 0.5);
 		}
+		for (int i = 0; i < 6; i++)
+		{
+			texturedata[i * 6 + 0] = glm::vec3(0.0, 0.0, 0.0);
+			texturedata[i * 6 + 1] = glm::vec3(1.0, 0.0, 0.0);
+			texturedata[i * 6 + 2] = glm::vec3(1.0, 1.0, 0.0);
+			texturedata[i * 6 + 3] = glm::vec3(0.0, 0.0, 0.0);
+			texturedata[i * 6 + 4] = glm::vec3(1.0, 1.0, 0.0);
+			texturedata[i * 6 + 5] = glm::vec3(0.0, 1.0, 0.0);
+		}
 
 		glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
 		glBindVertexArray(vao); //--- VAO를 바인드하기
-		glGenBuffers(3, vbo); //--- 3개의 VBO를 지정하고 할당하기
+		glGenBuffers(4, vbo); //--- 3개의 VBO를 지정하고 할당하기
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
@@ -142,14 +162,19 @@ struct CUBE :OBJECT
 		glEnableVertexAttribArray(0);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), colordata, GL_STATIC_DRAW);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec4), colordata, GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(1);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
 		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), normaldata, GL_STATIC_DRAW);
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(2);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[3]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), texturedata, GL_STATIC_DRAW);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(3);
 	}
 
 	void draw(int shaderID)
@@ -157,7 +182,19 @@ struct CUBE :OBJECT
 		unsigned int modelLocation = glGetUniformLocation(shaderID, "model");
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GetTransform() * GetmodelTransform()));
 		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textures[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindTexture(GL_TEXTURE_2D, textures[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glDrawArrays(GL_TRIANGLES, 6, 6);
+		glBindTexture(GL_TEXTURE_2D, textures[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glDrawArrays(GL_TRIANGLES, 12, 6);
+		glBindTexture(GL_TEXTURE_2D, textures[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glDrawArrays(GL_TRIANGLES, 18, 6);
+		glBindTexture(GL_TEXTURE_2D, textures[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glDrawArrays(GL_TRIANGLES, 24, 6);
+		glBindTexture(GL_TEXTURE_2D, textures[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glDrawArrays(GL_TRIANGLES, 30, 6);
 	}
 
 	void update()
@@ -171,6 +208,7 @@ struct CUBE :OBJECT
 	}
 };
 CUBE cube;
+CUBE skybox;
 CUBE minicube;
 
 struct SPHERE :OBJECT
@@ -181,13 +219,14 @@ struct SPHERE :OBJECT
 		{
 			double random_color = dis(gen);
 
-			colordata[i].x = dis(gen);
-			colordata[i].y = dis(gen);
-			colordata[i].z = dis(gen);
+			colordata[i].x = 1.0;
+			colordata[i].y = 1.0;
+			colordata[i].z = 1.0;
+			colordata[i].a = 0.5;
 		}
 		glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
 		glBindVertexArray(vao); //--- VAO를 바인드하기
-		glGenBuffers(3, vbo); //--- 3개의 VBO를 지정하고 할당하기
+		glGenBuffers(4, vbo); //--- 3개의 VBO를 지정하고 할당하기
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
@@ -195,8 +234,8 @@ struct SPHERE :OBJECT
 		glEnableVertexAttribArray(0);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), colordata, GL_STATIC_DRAW);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec4), colordata, GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(1);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
@@ -215,11 +254,6 @@ struct SPHERE :OBJECT
 
 	void update(glm::vec3 color)
 	{
-		for (int i = 0; i < vertex_count; i++)
-		{
-			colordata[i] = color;
-		}
-
 		glBindVertexArray(vao);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
@@ -229,6 +263,91 @@ struct SPHERE :OBJECT
 	}
 };
 SPHERE sphere;
+
+struct PYRAMID :OBJECT
+{
+	void Init()
+	{
+		for (int i = 0; i < vertex_count; i++)
+		{
+			colordata[i].x = 1.0;
+			colordata[i].y = 1.0;
+			colordata[i].z = 1.0;
+			colordata[i].a = 0.5;
+		}
+		for (int i = 0; i < vertex_count; i++)
+		{
+			vertexdata[i] -= glm::vec3(0.5, 0.5, 0.5);
+		}
+		for (int i = 0; i < 4; i++)
+		{
+			texturedata[i * 3 + 0] = glm::vec3(0.0, 0.0, 0.0);
+			texturedata[i * 3 + 1] = glm::vec3(1.0, 0.0, 0.0);
+			texturedata[i * 3 + 2] = glm::vec3(0.5, 1.0, 0.0);
+		}
+		texturedata[12] = glm::vec3(0.0, 0.0, 0.0);
+		texturedata[13] = glm::vec3(1.0, 0.0, 0.0);
+		texturedata[14] = glm::vec3(1.0, 1.0, 0.0);
+		texturedata[15] = glm::vec3(0.0, 0.0, 0.0);
+		texturedata[16] = glm::vec3(1.0, 1.0, 0.0);
+		texturedata[17] = glm::vec3(0.0, 1.0, 0.0);
+
+		glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
+		glBindVertexArray(vao); //--- VAO를 바인드하기
+		glGenBuffers(4, vbo); //--- 4개의 VBO를 지정하고 할당하기
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec4), colordata, GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), normaldata, GL_STATIC_DRAW);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(2);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[3]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), texturedata, GL_STATIC_DRAW);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(3);
+	}
+
+	void draw(int shaderID)
+	{
+		unsigned int modelLocation = glGetUniformLocation(shaderID, "model");
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GetTransform() * GetmodelTransform()));
+		glBindVertexArray(vao);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textures[0]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindTexture(GL_TEXTURE_2D, textures[0]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glDrawArrays(GL_TRIANGLES, 3, 3);
+		glBindTexture(GL_TEXTURE_2D, textures[0]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glDrawArrays(GL_TRIANGLES, 6, 3);
+		glBindTexture(GL_TEXTURE_2D, textures[0]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glDrawArrays(GL_TRIANGLES, 9, 3);
+		glBindTexture(GL_TEXTURE_2D, textures[0]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glDrawArrays(GL_TRIANGLES, 12, 3);
+		glBindTexture(GL_TEXTURE_2D, textures[0]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glDrawArrays(GL_TRIANGLES, 15, 3);
+	}
+
+	void update()
+	{
+		glBindVertexArray(vao);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(glm::vec3), vertexdata, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+	}
+};
+PYRAMID pyramid;
 
 GLfloat lineShape[10][2][3] = {};	//--- 선분 위치 값
 
@@ -245,8 +364,8 @@ GLfloat XYZcolors[6][3] = { //--- 축 색상
 	{ 0.0, 0.0, 1.0 },	   	{ 0.0, 0.0, 1.0 }
 };
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 4.0f); //--- 카메라 위치
-glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, 0.0f); //--- 카메라 바라보는 방향
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, -4.0f); //--- 카메라 위치
+glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, 100.0f); //--- 카메라 바라보는 방향
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f); //--- 카메라 위쪽 방향
 
 glm::mat4 model = glm::mat4(1.0f);
@@ -279,14 +398,27 @@ float near_1 = 0.1;
 float far_1 = 200.0;
 float persfect_z = -2.0;
 
+int movingMouse = -1;
+float beforeX, beforeY;
+float cameraDistance = 15.0f; // 구와의 거리
+float cameraHeight = 3.0f; // 카메라의 높이
+float cameraAngle = 180.0f; // 카메라 각도
+
 bool start = true;
 
 float w, a, s, d;
 float speed = 0.05;
 int JSelection = 0;
 int JCnt = 0;
-float jumpSize = 0.05;
-BOOL keyStates[256];
+float jumpSize = 0.1;
+const float gravity = 0.01f; // 중력 가속도
+const float initialHeight = 0.5f; // 초기 높이
+const float jumpInitialVelocity = 0.3f; // 초기 점프 속도
+float jumpVelocity = jumpInitialVelocity; // 점프 속도를 변화시킬 변수
+bool upKeyPressed = false;
+bool downKeyPressed = false;
+bool leftKeyPressed = false;
+bool rightKeyPressed = false;
 
 void make_shaderProgram();
 void make_vertexShaders();
@@ -302,7 +434,7 @@ GLvoid Motion(int x, int y);
 GLvoid TimerFunction(int value);
 GLvoid SpecialKeys(int key, int x, int y);
 GLvoid mouseWheel(int button, int dir, int x, int y);
-void checkKey();
+GLvoid SpecialKeysUp(int key, int x, int y);
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
@@ -325,12 +457,14 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 		std::cout << "GLEW Initialized\n";
 	}
 	cube.ReadObj("cube.obj");
+	skybox.ReadObj("cube.obj");
 	minicube.ReadObj("cube.obj");
 	sphere.ReadObj("sphere.obj");
 
 	//--- 세이더 읽어와서 세이더 프로그램 만들기
 	make_shaderProgram(); //--- 세이더 프로그램 만들기
 	InitBuffer();
+	InitTexture();
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE); //--- 상태 설정은 필요한 곳에서 하면 된다.
 	//glDisable(GL_DEPTH_TEST | GL_CULL_FACE);	//해제
@@ -339,8 +473,9 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
-	//glutSpecialFunc(SpecialKeys); // 방향키 콜백 함수 등록
-	glutMouseFunc(Mouse);
+	glutSpecialFunc(SpecialKeys); // 방향키 콜백 함수 등록
+	glutSpecialUpFunc(SpecialKeysUp); // 키 떼는 이벤트 처리 추가
+	//glutMouseFunc(Mouse);
 	glutMotionFunc(Motion);
 	glutMouseWheelFunc(mouseWheel);
 
@@ -350,7 +485,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 GLvoid drawScene()
 {
 	glUseProgram(shaderProgramID);
-	glClearColor(0.0, 0.0, 0.0, 1.0f);
+	glClearColor(1.0, 1.0, 1.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //--- 깊이 버퍼를 클리어한다.
 
 	glBindVertexArray(vao);
@@ -365,13 +500,16 @@ GLvoid drawScene()
 	int viewLocation = glGetUniformLocation(shaderProgramID, "view"); //--- 버텍스 세이더에서 뷰잉 변환 행렬 변수값을 받아온다.
 	int projLocation = glGetUniformLocation(shaderProgramID, "projection"); //--- 버텍스 세이더에서 투영 변환 행렬 변수값을 받아온다.
 
-	projection = glm::mat4(1.0f);
+	/*projection = glm::mat4(1.0f);
 	projection = glm::scale(projection, glm::vec3(wheel_scale, wheel_scale, wheel_scale));
 	projection = glm::rotate(projection, (float)glm::radians(x_angle + 30), glm::vec3(1.0, 0.0, 0.0));
 	projection = glm::rotate(projection, (float)glm::radians(y_angle - 30), glm::vec3(0.0, 1.0, 0.0));
 
 	unsigned int cameraLocation = glGetUniformLocation(shaderProgramID, "view");
-	glUniformMatrix4fv(cameraLocation, 1, GL_FALSE, glm::value_ptr(projection));
+	glUniformMatrix4fv(cameraLocation, 1, GL_FALSE, glm::value_ptr(projection));*/
+
+	view = glm::lookAt(cameraPos, cameraDirection, cameraUp);
+	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
 
 	glm::mat4 perspect = glm::mat4(1.0f);
 	perspect = glm::perspective(glm::radians(fovy), (float)windowWidth / (float)windowHeight, near_1, far_1);
@@ -421,6 +559,12 @@ GLvoid drawScene()
 	model = glm::mat4(1.0f);
 	sphere.draw(shaderProgramID);
 	minicube.draw(shaderProgramID);
+	skybox.draw(shaderProgramID);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//투명도 그리고 싶으면 여기에 객체 그리기
+	glDisable(GL_BLEND);
 
 	glutSwapBuffers(); //--- 화면에 출력하기
 }
@@ -441,6 +585,11 @@ void InitBuffer()
 	minicube.Init();
 	minicube.parent = &cube;
 	sphere.Init();
+	skybox.Init();
+
+	skybox.worldmatrix.position.y = 10;
+	skybox.worldmatrix.scale = glm::vec3(50.0, 50.0, 50.0);
+
 	minicube.worldmatrix.position.z = -3;
 	minicube.modelmatrix.scale = glm::vec3(0.5, 0.5, 0.5);
 }
@@ -463,7 +612,7 @@ void make_shaderProgram()
 
 void make_vertexShaders()
 {
-	vertexSource = filetobuf("vertex3.glsl");
+	vertexSource = filetobuf("vertex5.glsl");
 	//--- 버텍스 세이더 객체 만들기
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	//--- 세이더 코드를 세이더 객체에 넣기
@@ -484,7 +633,7 @@ void make_vertexShaders()
 
 void make_fragmentShaders()
 {
-	fragmentSource = filetobuf("fragment3.glsl");
+	fragmentSource = filetobuf("fragment5.glsl");
 	//--- 프래그먼트 세이더 객체 만들기
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	//--- 세이더 코드를 세이더 객체에 넣기
@@ -521,21 +670,11 @@ char* filetobuf(const char* file)
 	return buf; // Return the buffer 
 }
 
+//위 z+ 왼 x+
+
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
-	case 'w':
-		sphere.worldmatrix.position.z += speed;
-		break;
-	case 'a':
-		sphere.worldmatrix.position.x -= speed;
-		break;
-	case 's':
-		sphere.worldmatrix.position.z -= speed;
-		break;
-	case 'd':
-		sphere.worldmatrix.position.x += speed;
-		break;
 	case 'q':
 		glutLeaveMainLoop();
 		break;
@@ -547,54 +686,110 @@ GLvoid SpecialKeys(int key, int x, int y)
 {
 	switch (key) {
 	case GLUT_KEY_UP:
-		sphere.worldmatrix.position.z += speed;
+		upKeyPressed = true;
 		break;
 	case GLUT_KEY_DOWN:
-		sphere.worldmatrix.position.z -= speed;
+		downKeyPressed = true;
 		break;
 	case GLUT_KEY_LEFT:
-		sphere.worldmatrix.position.x -= speed;
+		leftKeyPressed = true;
 		break;
 	case GLUT_KEY_RIGHT:
-		sphere.worldmatrix.position.x += speed;
+		rightKeyPressed = true;
 		break;
 	}
 	glutPostRedisplay(); // 화면 갱신
 }
 
-int movingMouse = -1;
-float beforeX, beforeY;
-
-GLvoid Mouse(int button, int state, int x, int y)
-{
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-	{
-		ox = x;
-		oy = y;
-		left_button = true;
-	}
-	else
-	{
-		ox = 0;
-		oy = 0;
-		pre_x_angle = x_angle;
-		pre_y_angle = y_angle;
-		left_button = false;
+GLvoid SpecialKeysUp(int key, int x, int y) {
+	switch (key) {
+	case GLUT_KEY_UP:
+		upKeyPressed = false;
+		break;
+	case GLUT_KEY_DOWN:
+		downKeyPressed = false;
+		break;
+	case GLUT_KEY_LEFT:
+		leftKeyPressed = false;
+		break;
+	case GLUT_KEY_RIGHT:
+		rightKeyPressed = false;
+		break;
 	}
 }
 
+void moveSphere()
+{
+	if (upKeyPressed)
+	{
+		sphere.worldmatrix.position.z += speed;
+	}
+	if (downKeyPressed)
+	{
+		sphere.worldmatrix.position.z -= speed;
+	}
+	if (leftKeyPressed)
+	{
+		sphere.worldmatrix.position.x += speed;
+	}
+	if (rightKeyPressed)
+	{
+		sphere.worldmatrix.position.x -= speed;
+	}
+}
+
+
+
+//GLvoid Mouse(int button, int state, int x, int y)
+//{
+//	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+//	{
+//		ox = x;
+//		oy = y;
+//		left_button = true;
+//	}
+//	else
+//	{
+//		ox = 0;
+//		oy = 0;
+//		pre_x_angle = x_angle;
+//		pre_y_angle = y_angle;
+//		left_button = false;
+//	}
+//}
+
+//GLvoid Motion(int x, int y)
+//{
+//	if (left_button)
+//	{
+//		y_angle = x - ox;
+//		x_angle = y - oy;
+//		x_angle += pre_x_angle;
+//		y_angle += pre_y_angle;
+//
+//		y_angle /= 2;
+//		x_angle /= 2;
+//	}
+//	glutPostRedisplay();
+//}
+
+
+
 GLvoid Motion(int x, int y)
 {
-	if (left_button)
-	{
-		y_angle = x - ox;
-		x_angle = y - oy;
-		x_angle += pre_x_angle;
-		y_angle += pre_y_angle;
+	ox = x;
+	oy = y;
+	left_button = true;
+	
+	float x_diff = x - ox;
+	float y_diff = y - oy;
+	cameraDirection += x_diff / 2;
 
-		y_angle /= 2;
-		x_angle /= 2;
-	}
+	// 카메라 높이와 거리를 구와의 상대적인 위치로 설정
+	cameraPos.x = sphere.worldmatrix.position.x + cameraDistance * sin(glm::radians(cameraAngle));
+	cameraPos.y = sphere.worldmatrix.position.y + cameraHeight;
+	cameraPos.z = sphere.worldmatrix.position.z + cameraDistance * cos(glm::radians(cameraAngle));
+	
 	glutPostRedisplay();
 }
 
@@ -621,31 +816,36 @@ GLvoid WindowToOpenGL(int mouseX, int mouseY, float& x, float& y)
 	y = 1.0f - (2.0f * mouseY) / windowHeight;
 }
 
+glm::vec3 prevSpherePosition = sphere.worldmatrix.position;
+
 GLvoid TimerFunction(int value)
 {
 	switch (value)
 	{
 	case 1:
-		checkKey();
 
-		if (JSelection == 0)
-		{
-			sphere.worldmatrix.position.y += jumpSize;
-			JCnt++;
-			if (JCnt > 70)
-			{
-				JSelection = 1;
-			}
+		moveSphere();
+
+		sphere.worldmatrix.position.y += jumpVelocity; // 구에 점프 속도 적용
+		sphere.worldmatrix.scale = glm::vec3(1.0f, 1.0f+jumpVelocity, 1.0f);
+
+		// 카메라 위치 조정
+		cameraPos.x = sphere.worldmatrix.position.x + cameraDistance * sin(glm::radians(cameraAngle));
+		cameraPos.y = sphere.worldmatrix.position.y + cameraHeight;
+		cameraPos.z = sphere.worldmatrix.position.z + cameraDistance * cos(glm::radians(cameraAngle));
+
+		//// 카메라가 구를 바라보도록 방향 설정
+		//cameraDirection = glm::normalize(sphere.worldmatrix.position - cameraPos);
+
+		// 중력 적용
+		jumpVelocity -= gravity;
+
+		// 땅에 닿았을 때의 처리
+		if (sphere.worldmatrix.position.y <= initialHeight) {
+			sphere.worldmatrix.position.y = initialHeight;
+			jumpVelocity = jumpInitialVelocity; // 다시 초기 점프 속도로 설정
 		}
-		if (JSelection == 1)
-		{
-			sphere.worldmatrix.position.y -= jumpSize;
-			JCnt--;
-			if (JCnt < 0)
-			{
-				JSelection = 0;
-			}
-		}
+
 		break;
 	}
 	glutPostRedisplay();
@@ -654,22 +854,85 @@ GLvoid TimerFunction(int value)
 
 //update() : 아예 데이터를 바꾸고 싶을때 쓴다.
 
-void checkKey()
+void InitTexture()
 {
-	if (keyStates[VK_LEFT])
-	{
-		sphere.worldmatrix.position.x -= speed;
-	}
-	if (keyStates[VK_RIGHT])
-	{
-		sphere.worldmatrix.position.x += speed;
-	}
-	if (keyStates[VK_UP])
-	{
-		sphere.worldmatrix.position.z += speed;
-	}
-	if (keyStates[VK_DOWN])
-	{
-		sphere.worldmatrix.position.z -= speed;
-	}
+	int widthimage1, heightimage1, numberOfChannel1;
+	stbi_set_flip_vertically_on_load(true);
+	glGenTextures(8, textures);
+
+	unsigned char* data1 = stbi_load("test.bmp", &widthimage1, &heightimage1, &numberOfChannel1, 0);
+	//--- texture[0]
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, widthimage1, heightimage1, 0, GL_RGB, GL_UNSIGNED_BYTE, data1); //---텍스처 이미지 정의
+
+	unsigned char* data2 = stbi_load("space2.png", &widthimage1, &heightimage1, &numberOfChannel1, 0);
+	//--- texture[1] 우주 배경
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, widthimage1, heightimage1, 0, GL_RGB, GL_UNSIGNED_BYTE, data2); //---텍스처 이미지 정의
+
+	unsigned char* data3 = stbi_load("C.bmp", &widthimage1, &heightimage1, &numberOfChannel1, 0);
+	//--- texture[2]
+	glBindTexture(GL_TEXTURE_2D, textures[2]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, widthimage1, heightimage1, 0, GL_RGB, GL_UNSIGNED_BYTE, data3); //---텍스처 이미지 정의
+
+	unsigned char* data4 = stbi_load("D.bmp", &widthimage1, &heightimage1, &numberOfChannel1, 0);
+	//--- texture[3]
+	glBindTexture(GL_TEXTURE_2D, textures[3]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, widthimage1, heightimage1, 0, GL_RGB, GL_UNSIGNED_BYTE, data4); //---텍스처 이미지 정의
+
+	unsigned char* data5 = stbi_load("E.bmp", &widthimage1, &heightimage1, &numberOfChannel1, 0);
+	//--- texture[4]
+	glBindTexture(GL_TEXTURE_2D, textures[4]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, widthimage1, heightimage1, 0, GL_RGB, GL_UNSIGNED_BYTE, data5); //---텍스처 이미지 정의
+
+	unsigned char* data6 = stbi_load("F.bmp", &widthimage1, &heightimage1, &numberOfChannel1, 0);
+	//--- texture[5]
+	glBindTexture(GL_TEXTURE_2D, textures[5]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, widthimage1, heightimage1, 0, GL_RGB, GL_UNSIGNED_BYTE, data6); //---텍스처 이미지 정의
+
+	unsigned char* data7 = stbi_load("stone.bmp", &widthimage1, &heightimage1, &numberOfChannel1, 0);
+	//--- texture[6]
+	glBindTexture(GL_TEXTURE_2D, textures[6]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, widthimage1, heightimage1, 0, GL_RGB, GL_UNSIGNED_BYTE, data7); //---텍스처 이미지 정의
+
+	unsigned char* data8 = stbi_load("plain.bmp", &widthimage1, &heightimage1, &numberOfChannel1, 0);
+	//--- texture[6]
+	glBindTexture(GL_TEXTURE_2D, textures[7]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, widthimage1, heightimage1, 0, GL_RGB, GL_UNSIGNED_BYTE, data8); //---텍스처 이미지 정의
+
+	glUseProgram(shaderProgramID);
+	int tLocation = glGetUniformLocation(shaderProgramID, "outTexture"); //--- outTexture1 유니폼 샘플러의 위치를 가져옴
+	glUniform1i(tLocation, 0); //--- 샘플러를 0번 유닛으로 설정
 }
