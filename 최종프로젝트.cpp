@@ -177,23 +177,23 @@ struct CUBE :OBJECT
 		glEnableVertexAttribArray(3);
 	}
 
-	void draw(int shaderID)
+	void draw(int shaderID, int num)
 	{
 		unsigned int modelLocation = glGetUniformLocation(shaderID, "model");
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GetTransform() * GetmodelTransform()));
 		glBindVertexArray(vao);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textures[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glBindTexture(GL_TEXTURE_2D, textures[num]); //--- texture[0]을 사용하여 폴리곤을 그린다.
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glBindTexture(GL_TEXTURE_2D, textures[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glBindTexture(GL_TEXTURE_2D, textures[num]); //--- texture[0]을 사용하여 폴리곤을 그린다.
 		glDrawArrays(GL_TRIANGLES, 6, 6);
-		glBindTexture(GL_TEXTURE_2D, textures[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glBindTexture(GL_TEXTURE_2D, textures[num]); //--- texture[0]을 사용하여 폴리곤을 그린다.
 		glDrawArrays(GL_TRIANGLES, 12, 6);
-		glBindTexture(GL_TEXTURE_2D, textures[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glBindTexture(GL_TEXTURE_2D, textures[num]); //--- texture[0]을 사용하여 폴리곤을 그린다.
 		glDrawArrays(GL_TRIANGLES, 18, 6);
-		glBindTexture(GL_TEXTURE_2D, textures[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glBindTexture(GL_TEXTURE_2D, textures[num]); //--- texture[0]을 사용하여 폴리곤을 그린다.
 		glDrawArrays(GL_TRIANGLES, 24, 6);
-		glBindTexture(GL_TEXTURE_2D, textures[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+		glBindTexture(GL_TEXTURE_2D, textures[num]); //--- texture[0]을 사용하여 폴리곤을 그린다.
 		glDrawArrays(GL_TRIANGLES, 30, 6);
 	}
 
@@ -558,8 +558,8 @@ GLvoid drawScene()
 	//s r t p 코드 작성시에는 반대 방향으로.
 	model = glm::mat4(1.0f);
 	sphere.draw(shaderProgramID);
-	minicube.draw(shaderProgramID);
-	skybox.draw(shaderProgramID);
+	minicube.draw(shaderProgramID,1);
+	skybox.draw(shaderProgramID,1);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
